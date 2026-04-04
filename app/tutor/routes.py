@@ -4,7 +4,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from . import tutor_bp
-from ..models import User, Course, Video, Quiz, QuizHistory, db
+from ..models import User, Course, Video, Quiz, QuizHistory, UserCoupon, db
 from modules.text_generation import generate_gemini_quiz, generate_gemini_chat, generate_gemini_notes, generate_gemini_vision, generate_gemini_courses, generate_specific_course
 from modules.text_to_speech import generate_tts
 from modules.video_search import search_videos
@@ -356,3 +356,31 @@ def api_more_courses():
         db.session.rollback()
         print(f"More Courses Error: {e}")
         return jsonify({'success': False, 'message': str(e)})
+
+@tutor_bp.route('/rewards')
+@login_required
+def rewards():
+    # Mapping URLs to brands for better display
+    brand_map = {
+        'bitli.in': 'Special Reward',
+        'ajiio.in': 'AJIO',
+        'fktr.in': 'Flipkart',
+        'myntr.it': 'Myntra'
+    }
+    
+    coupons = UserCoupon.query.filter_by(user_id=current_user.id).order_by(UserCoupon.date_earned.desc()).all()
+    
+    formatted_coupons = []
+    for c in coupons:
+        brand = 'Mystery Coupon'
+        for key, name in brand_map.items():
+            if key in c.coupon_url:
+                brand = name
+                break
+        formatted_coupons.append({
+            'url': c.coupon_url,
+            'date': c.date_earned.strftime('%d %b %Y'),
+            'brand': brand
+        })
+        
+    return render_template('tutor/rewards.html', coupons=formatted_coupons)

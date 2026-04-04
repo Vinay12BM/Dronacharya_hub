@@ -27,6 +27,7 @@ class User(UserMixin, db.Model):
     completed_videos = db.relationship('Video', secondary=user_video_completion,
                                        lazy='dynamic', backref=db.backref('completed_by_users', lazy=True))
     quiz_history = db.relationship('QuizHistory', backref='user', lazy=True, foreign_keys='QuizHistory.user_id')
+    coupons      = db.relationship('UserCoupon',  backref='user', lazy=True)
 
     def __init__(self, **kwargs):
         raw_password = kwargs.pop('password', None)
@@ -111,6 +112,17 @@ class Note(db.Model):
     file_path     = db.Column(db.String(200), nullable=False)
     uploader_name = db.Column(db.String(100), nullable=False)
     date_uploaded = db.Column(db.DateTime, default=datetime.utcnow)
+
+# ─────────────────────────────────────────
+# COUPON MODEL
+# ─────────────────────────────────────────
+
+class UserCoupon(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id            = db.Column(db.Integer, primary_key=True)
+    user_id       = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    coupon_url    = db.Column(db.String(300), nullable=False)
+    date_earned   = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ─────────────────────────────────────────
 # DISTANCE HELPER
