@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-model_id = 'gemini-1.5-flash'
+model_id = 'gemini-2.0-flash'
 
 def serialize_history(history):
     result = []
