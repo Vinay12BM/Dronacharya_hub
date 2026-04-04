@@ -4,7 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-model_id = 'gemini-2.0-flash'
+model_id = 'gemini-flash-latest' # More stable for free tier
+fallback_models = ['gemini-2.0-flash-lite', 'gemini-pro-latest', 'gemini-2.0-flash']
 
 def serialize_history(history):
     result = []
@@ -30,6 +31,15 @@ def generate_gemini_quiz(topic):
         err_msg = str(e)
         print(f"Gemini Quiz Error: {err_msg}")
         if "429" in err_msg or "quota" in err_msg.lower():
+            # Try fallbacks
+            for fb_model in fallback_models:
+                try:
+                    response = client.models.generate_content(model=fb_model, contents=system_instruction)
+                    text = response.text.strip()
+                    if '```json' in text: text = text.split('```json')[1].split('```')[0].strip()
+                    return json.loads(text)
+                except:
+                    continue
             return [
                 {"question": f"Which of the following describes a core aspect of {topic}?", "options": {"A": "Option 1", "B": "Option 2", "C": "Correct Principle", "D": "None"}, "answer": "C"},
                 {"question": f"True or False: {topic} is widely used in modern education.", "options": {"A": "True", "B": "False", "C": "Maybe", "D": "Not sure"}, "answer": "A"}
@@ -42,22 +52,39 @@ def generate_gemini_chat(message, history):
         "Be patient, clear, encouraging. Use examples. Format responses in markdown. "
         "Never refuse a learning question."
     )
-    chat = client.chats.create(model=model_id, config={'system_instruction': system_instruction}, history=history)
     try:
+        chat = client.chats.create(model=model_id, config={'system_instruction': system_instruction}, history=history)
         response = chat.send_message(message)
         return response.text, serialize_history(chat.history)
     except Exception as e:
-        print(f"Gemini Chat Error: {e}")
+        err_msg = str(e)
+        print(f"Gemini Chat Error: {err_msg}")
+        if "429" in err_msg or "quota" in err_msg.lower():
+            for fb_model in fallback_models:
+                try:
+                    chat = client.chats.create(model=fb_model, config={'system_instruction': system_instruction}, history=history)
+                    response = chat.send_message(message)
+                    return response.text, serialize_history(chat.history)
+                except:
+                    continue
         return "I am currently unable to answer that. Please try again later.", history
 
 def generate_tumtum_chat(message, history):
-    chat = client.chats.create(model=model_id, history=history)
     try:
+        chat = client.chats.create(model=model_id, history=history)
         response = chat.send_message(message)
         return response.text, serialize_history(chat.history)
     except Exception as e:
         err_msg = str(e)
         print(f"TumTum API Error: {err_msg}")
+        if "429" in err_msg or "quota" in err_msg.lower():
+            for fb_model in fallback_models:
+                try:
+                    chat = client.chats.create(model=fb_model, history=history)
+                    response = chat.send_message(message)
+                    return response.text, serialize_history(chat.history)
+                except:
+                    continue
         return f"AI Assistant Error: {err_msg}", history
 
 def generate_gemini_paper(topic, language):
@@ -80,6 +107,16 @@ def generate_gemini_paper(topic, language):
         err_msg = str(e)
         print(f"Gemini Research Error: {err_msg}")
         if "429" in err_msg or "quota" in err_msg.lower():
+            # Try fallback models for real paper generation
+            for fb_model in fallback_models:
+                try:
+                    fb_response = client.models.generate_content(model=fb_model, contents=system_instruction)
+                    if fb_response.text:
+                        return fb_response.text
+                except:
+                    continue
+            
+            # If all fail, use demo mode
             refs = "\n".join([f"{i}. Expert, A. (202{random.randint(0,5)}). Research on {topic} Vol {i}." for i in range(1, 13)])
             return f"""# [DEMO MODE: Quota Exceeded] Research Paper: {topic}
 ## Abstract
@@ -131,7 +168,13 @@ def generate_gemini_citation(source, style):
         err_msg = str(e)
         print(f"Gemini Citation Error: {err_msg}")
         if "429" in err_msg or "quota" in err_msg.lower():
-            # Demo fallback
+            for fb_model in fallback_models:
+                try:
+                    fb_response = client.models.generate_content(model=fb_model, contents=system_instruction)
+                    if fb_response.text:
+                        return fb_response.text.strip()
+                except:
+                    continue
             return f"{source} ({style} style). [Note: Quota Exceeded, using simplified format]"
         return None
 
@@ -142,8 +185,17 @@ def generate_gemini_notes(topic):
             return response.text
         return f"# Study Notes: {topic}\n(Empty response from AI)"
     except Exception as e:
-        print(f"Gemini Notes Error: {e}")
-        return f"# Study Notes: {topic}\n(Error)"
+        err_msg = str(e)
+        print(f"Gemini Notes Error: {err_msg}")
+        if "429" in err_msg or "quota" in err_msg.lower():
+            for fb_model in fallback_models:
+                try:
+                    fb_response = client.models.generate_content(model=fb_model, contents=f"Generate study notes for: {topic}")
+                    if fb_response.text:
+                        return fb_response.text
+                except:
+                    continue
+        return f"# Study Notes: {topic}\n(Error: {err_msg})"
 
 def generate_chess_move(fen):
     system_instruction = (
@@ -155,7 +207,16 @@ def generate_chess_move(fen):
         response = client.models.generate_content(model=model_id, contents=system_instruction)
         return response.text.strip().lower()
     except Exception as e:
-        print(f"Gemini Chess Move Error: {e}")
+        err_msg = str(e)
+        print(f"Gemini Chess Move Error: {err_msg}")
+        if "429" in err_msg or "quota" in err_msg.lower():
+            for fb_model in fallback_models:
+                try:
+                    fb_response = client.models.generate_content(model=fb_model, contents=system_instruction)
+                    if fb_response.text:
+                        return fb_response.text.strip().lower()
+                except:
+                    continue
         return None
 
 def generate_crossmath_puzzle(difficulty="Medium"):
@@ -173,6 +234,16 @@ def generate_crossmath_puzzle(difficulty="Medium"):
         err_msg = str(e)
         print(f"Gemini Crossmath Error: {err_msg}")
         if "429" in err_msg or "quota" in err_msg.lower() or "limit" in err_msg.lower():
+            # Try fallbacks first
+            for fb_model in fallback_models:
+                try:
+                    fb_response = client.models.generate_content(model=fb_model, contents=system_instruction)
+                    text = fb_response.text.strip()
+                    if '```json' in text: text = text.split('```json')[1].split('```')[0].strip()
+                    return json.loads(text)
+                except:
+                    continue
+            
             # Local fallback generator for a valid 3x3 grid
             import random
             def solve(a, op, b):
