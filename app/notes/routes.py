@@ -31,10 +31,10 @@ def upload():
             return redirect(request.url)
             
         if file and allowed_file(file.filename):
-            from modules.cloudinary_helper import upload_file_to_cloudinary
-            c_url = upload_file_to_cloudinary(file, folder="notes")
-            if c_url:
-                unique_filename = c_url
+            from modules.supabase_helper import upload_file_to_supabase
+            s_url = upload_file_to_supabase(file, folder="notes")
+            if s_url:
+                unique_filename = s_url
             else:
                 filename = secure_filename(file.filename)
                 unique_filename = f"{uuid.uuid4().hex}_{filename}"

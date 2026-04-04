@@ -170,15 +170,14 @@ def profile():
         current_user.first_name = request.form.get('first_name')
         current_user.last_name = request.form.get('last_name')
         current_user.dob = request.form.get('dob')
-        
         if 'profile_pic' in request.files:
             file = request.files['profile_pic']
             if file and file.filename != '':
-                from modules.cloudinary_helper import upload_file_to_cloudinary
-                # Try Cloudinary first
-                c_url = upload_file_to_cloudinary(file, folder="avatars")
-                if c_url:
-                    current_user.profile_pic = c_url
+                from modules.supabase_helper import upload_file_to_supabase
+                # Try Supabase first
+                s_url = upload_file_to_supabase(file, folder="avatars")
+                if s_url:
+                    current_user.profile_pic = s_url
                 else:
                     # LOCAL FALLBACK
                     filename = secure_filename(f"avatar_{current_user.id}_{file.filename}")
