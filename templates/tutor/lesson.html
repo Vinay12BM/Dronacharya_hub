@@ -71,7 +71,10 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const el = document.getElementById('answer-content');
-        if(el) el.innerHTML = marked.parse(el.innerHTML);
+        if(el) {
+            el.innerHTML = marked.parse(el.innerHTML);
+            window.renderMath(el);
+        }
     });
 </script>
 {% endblock %}

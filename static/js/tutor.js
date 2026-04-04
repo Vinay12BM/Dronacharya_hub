@@ -21,9 +21,11 @@ function appendChatBubble(text, role){
   const div=document.createElement('div');
   div.className=role==='user'?'flex justify-end mb-3':'flex justify-start mb-3';
   const bubble=document.createElement('div');
-  bubble.className=role==='user'?'bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-br-sm max-w-xs text-sm':'bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-sm max-w-sm text-sm text-gray-800';
-  if(role==='bot') bubble.innerHTML=marked.parse(text);
-  else bubble.textContent=text;
+  bubble.className=role==='user'?'bg-green-50 border border-green-200 px-4 py-3 rounded-2xl rounded-br-sm max-w-xs text-[12px] md:text-sm text-gray-800 shadow-sm':'bg-blue-50 border border-blue-100 px-4 py-3 rounded-2xl rounded-bl-sm max-w-sm text-[12px] md:text-sm text-gray-800 shadow-sm';
+  if(role==='bot') {
+    bubble.innerHTML=marked.parse(text);
+    window.renderMath(bubble);
+  } else bubble.textContent=text;
   div.appendChild(bubble);
   box.appendChild(div);
   box.scrollTop=box.scrollHeight;
@@ -32,7 +34,7 @@ function appendChatBubble(text, role){
 function showTypingIndicator(){
   const box=document.getElementById('chat-messages');
   if(box) {
-    box.innerHTML+='<div id="typing" class="flex justify-start mb-4"><div class="bg-white border px-4 py-4 rounded-2xl text-sm shadow-sm"><span class="typing-dots">● ● ●</span></div></div>';
+    box.innerHTML+='<div id="typing" class="flex justify-start mb-4"><div class="bg-blue-50 border border-blue-100 px-4 py-3 rounded-2xl text-sm shadow-sm"><span class="typing-dots text-blue-400">● ● ●</span></div></div>';
     box.scrollTop=box.scrollHeight;
   }
 }

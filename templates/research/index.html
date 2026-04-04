@@ -231,8 +231,8 @@ function appendMessage(role, text){
     div.className = `flex items-start gap-3 ${role === 'user' ? 'flex-row-reverse' : ''}`;
     
     div.innerHTML = `
-        <div class="w-8 h-8 ${role==='bot'?'bg-violet-100':'bg-violet-600 text-white'} rounded-full flex items-center justify-center text-sm">${role==='bot'?'🤖':'👤'}</div>
-        <div class="${role==='bot'?'bg-white border border-violet-50 rounded-tl-none':'bg-violet-600 text-white rounded-tr-none'} p-4 rounded-2xl shadow-sm text-xs leading-relaxed max-w-[80%] markdown-content">
+        <div class="w-8 h-8 ${role==='bot'?'bg-violet-100':'bg-violet-500 text-white'} rounded-full flex items-center justify-center text-sm">${role==='bot'?'🤖':'👤'}</div>
+        <div class="${role==='bot'?'bg-violet-50 border border-violet-100 rounded-tl-none':'bg-violet-500 text-white rounded-tr-none'} p-4 rounded-2xl shadow-sm text-xs leading-relaxed max-w-[80%] markdown-content">
             ${marked.parse(text)}
         </div>
     `;

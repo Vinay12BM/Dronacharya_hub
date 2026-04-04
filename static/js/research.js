@@ -17,7 +17,9 @@ async function generatePaper(){
     clearInterval(interval);
     if(data.success){
       currentMarkdown=data.content;
-      document.getElementById('paper-preview').innerHTML=marked.parse(currentMarkdown);
+      const previewEl=document.getElementById('paper-preview');
+      previewEl.innerHTML=marked.parse(currentMarkdown);
+      window.renderMath(previewEl);
       document.getElementById('paper-raw').value=currentMarkdown;
       document.getElementById('paper-output-area').classList.remove('hidden');
       document.getElementById('skeleton-area').classList.add('hidden');

@@ -1,11 +1,12 @@
 import os, json, random
 from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-model_id = 'gemini-2.5-flash' # Verified working with stable quota
-fallback_models = ['gemini-flash-lite-latest', 'gemini-2.0-flash', 'gemini-pro-latest']
+model_id = 'gemini-flash-latest' # Stable alias for 1.5-flash or 2.0-flash depending on region
+fallback_models = ['gemini-flash-lite-latest', 'gemini-pro-latest', 'gemini-2.0-flash']
 
 
 
@@ -40,7 +41,8 @@ def generate_gemini_quiz(topic):
     except Exception as e:
         err_msg = str(e)
         print(f"Gemini Quiz Error: {err_msg}")
-        if "429" in err_msg or "quota" in err_msg.lower():
+        # Always try fallback for ANY error that prevents generation
+        if True:
             # Try fallbacks with a tiny delay
             import time
             for fb_model in fallback_models:
@@ -77,7 +79,7 @@ def generate_gemini_chat(message, history):
     except Exception as e:
         err_msg = str(e)
         print(f"Gemini Chat Error: {err_msg}")
-        if "429" in err_msg or "quota" in err_msg.lower():
+        if True:
             import time
             for fb_model in fallback_models:
                 try:
@@ -101,7 +103,7 @@ def generate_tumtum_chat(message, history):
     except Exception as e:
         err_msg = str(e)
         print(f"TumTum API Error: {err_msg}")
-        if "429" in err_msg or "quota" in err_msg.lower():
+        if True:
             import time
             for fb_model in fallback_models:
                 try:
@@ -140,7 +142,7 @@ def generate_gemini_paper(topic, language):
     except Exception as e:
         err_msg = str(e)
         print(f"Gemini Research Error: {err_msg}")
-        if "429" in err_msg or "quota" in err_msg.lower():
+        if True:
             # Try fallback models for real paper generation
             for fb_model in fallback_models:
                 try:
@@ -205,7 +207,7 @@ def generate_gemini_citation(source, style):
     except Exception as e:
         err_msg = str(e)
         print(f"Gemini Citation Error: {err_msg}")
-        if "429" in err_msg or "quota" in err_msg.lower():
+        if True:
             for fb_model in fallback_models:
                 try:
                     fb_response = client.models.generate_content(model=fb_model, contents=system_instruction)
@@ -225,7 +227,7 @@ def generate_gemini_notes(topic):
     except Exception as e:
         err_msg = str(e)
         print(f"Gemini Notes Error: {err_msg}")
-        if "429" in err_msg or "quota" in err_msg.lower():
+        if True:
             for fb_model in fallback_models:
                 try:
                     fb_response = client.models.generate_content(model=fb_model, contents=f"Generate study notes for: {topic}")
@@ -247,7 +249,7 @@ def generate_chess_move(fen):
     except Exception as e:
         err_msg = str(e)
         print(f"Gemini Chess Move Error: {err_msg}")
-        if "429" in err_msg or "quota" in err_msg.lower():
+        if True:
             for fb_model in fallback_models:
                 try:
                     fb_response = client.models.generate_content(model=fb_model, contents=system_instruction)
@@ -271,7 +273,7 @@ def generate_crossmath_puzzle(difficulty="Medium"):
     except Exception as e:
         err_msg = str(e)
         print(f"Gemini Crossmath Error: {err_msg}")
-        if "429" in err_msg or "quota" in err_msg.lower() or "limit" in err_msg.lower():
+        if True:
             # Try fallbacks first
             for fb_model in fallback_models:
                 try:
@@ -321,3 +323,50 @@ def generate_crossmath_puzzle(difficulty="Medium"):
                 "clues": [f"Row 1: {a}{r1_op}{b}={c}", f"Col 1: {a}{c1_op}{d}={g}"]
             }
         return None
+
+def generate_gemini_vision(image_path, prompt="Solve this educational problem or explain the handwriting."):
+    """Uses Gemini vision to analyze an image (question/problem) and provide an answer."""
+    try:
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
+            
+        # Correct implementation for the latest google-genai SDK to avoid Pydantic validation errors
+        response = client.models.generate_content(
+            model=model_id,
+            contents=[
+                types.Content(
+                    role='user',
+                    parts=[
+                        types.Part.from_text(text=prompt),
+                        types.Part.from_bytes(data=image_data, mime_type='image/jpeg')
+                    ]
+                )
+            ]
+        )
+        return response.text
+    except Exception as e:
+        err_msg = str(e)
+        print(f"Gemini Vision Error: {err_msg}")
+        if True:
+             for fb_model in fallback_models:
+                try:
+                    import time
+                    time.sleep(1)
+                    with open(image_path, 'rb') as f:
+                         image_data = f.read()
+                    response = client.models.generate_content(
+                        model=fb_model,
+                        contents=[
+                            types.Content(
+                                role='user',
+                                parts=[
+                                    types.Part.from_text(text=prompt),
+                                    types.Part.from_bytes(data=image_data, mime_type='image/jpeg')
+                                ]
+                            )
+                        ]
+                    )
+                    return response.text
+                except:
+                    continue
+        return f"AI Vision Error: {err_msg}"

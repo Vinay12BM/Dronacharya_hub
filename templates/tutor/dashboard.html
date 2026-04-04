@@ -4,98 +4,107 @@
 <div class="max-w-7xl mx-auto px-4 py-8">
   <div class="flex items-center justify-between mb-8">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ current_user.first_name }}!</h1>
+      <h1 class="text-xl md:text-3xl font-bold text-gray-900 break-words">Welcome back, {{ current_user.first_name }}!
+      </h1>
       <p class="text-gray-500">Pick up where you left off or start a new challenge.</p>
     </div>
     <div class="hidden md:block">
-      <img src="{% if current_user.profile_pic.startswith('http') %}{{ current_user.profile_pic }}{% else %}{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}{% endif %}" class="w-16 h-16 rounded-full border-4 border-blue-500/20 object-cover shadow-lg">
+      <img
+        src="{% if current_user.profile_pic.startswith('http') %}{{ current_user.profile_pic }}{% else %}{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}{% endif %}"
+        class="w-16 h-16 rounded-full border-4 border-blue-500/20 object-cover shadow-lg">
     </div>
   </div>
 
-  <div class="grid md:grid-cols-3 gap-6 mb-8">
-    <div class="card p-6 bg-gradient-to-br from-blue-500 to-blue-700 text-white border-none">
-      <h3 class="font-bold opacity-80 mb-1">Enrolled Courses</h3>
-      <div class="text-3xl font-bold">{{ progress_data|length }}</div>
+  <!-- Stats Row: 3 cards in one line on mobile for better space efficiency -->
+  <div class="grid grid-cols-3 gap-2 md:gap-6 mb-8">
+    <div class="card p-3 md:p-6 bg-gradient-to-br from-blue-500 to-blue-700 text-white border-none shadow-lg">
+      <h3 class="text-[10px] md:text-sm font-bold opacity-80 mb-1 leading-tight">Enrolled Courses</h3>
+      <div class="text-xl md:text-3xl font-bold">{{ progress_data|length }}</div>
     </div>
-    <div class="card p-6 bg-gradient-to-br from-amber-400 to-orange-500 text-white border-none">
-      <h3 class="font-bold opacity-80 mb-1">Quizzes Taken</h3>
-      <div class="text-3xl font-bold">{{ current_user.quiz_history|length }}</div>
+    <div class="card p-3 md:p-6 bg-gradient-to-br from-amber-400 to-orange-500 text-white border-none shadow-lg">
+      <h3 class="text-[10px] md:text-sm font-bold opacity-80 mb-1 leading-tight">Quizzes Taken</h3>
+      <div class="text-xl md:text-3xl font-bold">{{ current_user.quiz_history|length }}</div>
     </div>
-    <div class="card p-6 bg-gradient-to-br from-green-500 to-emerald-700 text-white border-none">
-      <h3 class="font-bold opacity-80 mb-1">Videos Mastered</h3>
-      <div class="text-3xl font-bold">{{ current_user.completed_videos.count() }}</div>
+    <div class="card p-3 md:p-6 bg-gradient-to-br from-green-500 to-emerald-700 text-white border-none shadow-lg">
+      <h3 class="text-[10px] md:text-sm font-bold opacity-80 mb-1 leading-tight">Videos Mastered</h3>
+      <div class="text-xl md:text-3xl font-bold">{{ current_user.completed_videos.count() }}</div>
     </div>
   </div>
 
   <div class="grid lg:grid-cols-3 gap-8">
-    <!-- Left Column: Courses -->
-    <div class="lg:col-span-2 space-y-6">
+    <!-- Learning Progress: Hidden on phone, 1st on desktop -->
+    <div class="hidden lg:block order-2 lg:order-1 lg:col-span-2 space-y-6">
       <h2 class="text-2xl font-bold">Your Learning Progress</h2>
       {% if not progress_data %}
-        <div class="card p-12 text-center bg-gray-50 border-dashed">
-          <p class="text-gray-500 mb-4">You haven't enrolled in any courses yet.</p>
-          <a href="{{ url_for('tutor.courses') }}" class="btn-primary btn-tutor">Browse Courses</a>
-        </div>
+      <div class="card p-12 text-center bg-gray-50 border-dashed">
+        <p class="text-gray-500 mb-4">You haven't enrolled in any courses yet.</p>
+        <a href="{{ url_for('tutor.courses') }}" class="btn-primary btn-tutor">Browse Courses</a>
+      </div>
       {% else %}
-        <div class="grid md:grid-cols-2 gap-6">
-          {% for item in progress_data[:6] %}
-            <div class="card p-5 group hover:border-blue-300 transition-all">
-              <div class="text-xs font-bold text-blue-600 mb-2 uppercase">{{ item.course.level }}</div>
-              <h3 class="font-bold text-lg mb-4 group-hover:text-blue-700">{{ item.course.title }}</h3>
-              <div class="mb-4">
-                <div class="flex justify-between text-xs mb-1">
-                  <span>Progress</span>
-                  <span>{{ item.progress }}%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: {{ item.progress }}%;"></div>
-                </div>
-              </div>
-              <a href="{{ url_for('tutor.course_detail', id=item.course.id) }}" class="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">Continue Learning →</a>
+      <div class="grid grid-cols-2 gap-3 md:gap-6">
+        {% for item in progress_data[:6] %}
+        <div class="card p-3 md:p-5 group hover:border-blue-300 transition-all shadow-sm">
+          <div class="text-[9px] md:text-xs font-bold text-blue-600 mb-1 uppercase tracking-wider">{{ item.course.level }}</div>
+          <h3 class="font-bold text-sm md:text-lg mb-2 md:mb-4 group-hover:text-blue-700 leading-tight line-clamp-2 h-10 md:h-14">{{ item.course.title }}</h3>
+          <div class="mb-3 md:mb-4">
+            <div class="flex justify-between text-[10px] mb-1">
+              <span>Progress</span>
+              <span>{{ item.progress }}%</span>
             </div>
-          {% endfor %}
-
-          <!-- View All Courses Card -->
-          <a href="{{ url_for('tutor.courses') }}" class="card p-5 flex flex-col items-center justify-center text-center bg-blue-50/50 border-dashed border-2 border-blue-200 hover:bg-blue-100/50 hover:border-blue-400 transition-all group">
-            <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">📚</div>
-            <h3 class="font-bold text-blue-800">Explore All Courses</h3>
-            <p class="text-xs text-blue-600/70 mt-1">View all {{ progress_data|length }} available disciplines</p>
-          </a>
+            <div class="progress-bar !h-1 md:!h-1.5">
+              <div class="progress-fill" style="width: {{ item.progress }}%;"></div>
+            </div>
+          </div>
+          <a href="{{ url_for('tutor.course_detail', id=item.course.id) }}"
+            class="text-[10px] md:text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">Resume →</a>
         </div>
+        {% endfor %}
+
+        <!-- View All Courses Card -->
+        <a href="{{ url_for('tutor.courses') }}"
+          class="card p-3 md:p-5 flex flex-col items-center justify-center text-center bg-blue-50/50 border-dashed border-2 border-blue-200 hover:bg-blue-100/50 hover:border-blue-400 transition-all group">
+          <div class="text-2xl md:text-4xl mb-2 group-hover:scale-110 transition-transform">📚</div>
+          <h3 class="font-bold text-xs md:text-sm text-blue-800">All Courses</h3>
+        </a>
+      </div>
       {% endif %}
     </div>
 
-    <!-- Right Column: Tools -->
-    <div class="space-y-6">
+    <!-- Study Tools: 1st on mobile, 2nd on desktop -->
+    <div class="order-1 lg:order-2 space-y-6">
       <h2 class="text-2xl font-bold">Study Tools</h2>
-      
+
       <!-- Notes Gen -->
       <div class="card p-6 border-blue-100 bg-blue-50/50">
         <h3 class="font-bold mb-4 flex items-center gap-2">
-            <span>📝</span> Generate Study Notes
+          <span>📝</span> Generate Study Notes
         </h3>
         <p class="text-xs text-gray-500 mb-4">Enter a topic and get AI-generated notes instantly in DOCX format.</p>
         <div class="space-y-3">
-            <input type="text" id="notes-topic-input" class="w-full px-4 py-2 rounded-lg border border-gray-200 text-sm" placeholder="e.g. Photosynthesis">
-            <button onclick="generateAndDownloadNotes()" class="w-full btn-primary btn-tutor text-sm py-3">Generate & Download</button>
+          <input type="text" id="notes-topic-input" class="w-full px-4 py-2 rounded-lg border border-gray-200 text-sm"
+            placeholder="e.g. Photosynthesis">
+          <button onclick="generateAndDownloadNotes()" class="w-full btn-primary btn-tutor text-sm py-3">Generate &
+            Download</button>
         </div>
       </div>
 
       <!-- Quick AI Chat -->
       <div class="card p-6 border-violet-100 bg-violet-50/50">
         <h3 class="font-bold mb-4 flex items-center gap-2">
-            <span>💬</span> Quick AI Doubt
+          <span>💬</span> Quick AI Doubt
         </h3>
         <p class="text-xs text-gray-500 mb-4">Have a quick question? Ask Dronacharya AI tutor now.</p>
         <form action="{{ url_for('tutor.get_answer') }}" method="POST" class="space-y-3">
-          <input type="text" name="question" required class="w-full px-4 py-2 rounded-lg border border-gray-200 text-sm" placeholder="Ask anything...">
+          <input type="text" name="question" required class="w-full px-4 py-2 rounded-lg border border-gray-200 text-sm"
+            placeholder="Ask anything...">
           <button type="submit" class="w-full btn-primary btn-research text-sm py-3">Ask AI Tutor</button>
         </form>
       </div>
 
-      <a href="{{ url_for('tutor.quiz_page') }}" class="block card p-6 border-orange-100 bg-orange-50/50 hover:border-orange-300 transition">
+      <a href="{{ url_for('tutor.quiz_page') }}"
+        class="block card p-6 border-orange-100 bg-orange-50/50 hover:border-orange-300 transition">
         <h3 class="font-bold mb-2 flex items-center gap-2">
-            <span>🎮</span> Play AI Quiz
+          <span>🎮</span> Play AI Quiz
         </h3>
         <p class="text-xs text-gray-500">Test your knowledge with 10 random MCQs.</p>
       </a>
