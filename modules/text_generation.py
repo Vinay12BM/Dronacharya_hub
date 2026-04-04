@@ -89,15 +89,22 @@ def generate_tumtum_chat(message, history):
 
 def generate_gemini_paper(topic, language):
     system_instruction = (
-        f"You are an expert academic writer. Generate a comprehensive research paper about '{topic}' "
-        f"written entirely in {language}. Include these exact markdown sections: "
-        f"## Research Topic\n## Abstract\n## Introduction\n## Literature Review\n"
-        f"## Methodology\n## Main Findings / Discussion\n## Conclusion\n## References\n"
+        f"You are a PhD-level academic writer. Generate a comprehensive and extensive research paper about '{topic}' "
+        f"written entirely in {language}. The paper MUST be between 2000 and 2500 words in length. "
+        f"Each section should be highly detailed with in-depth academic analysis. "
+        f"Include these exact markdown sections: "
+        f"\n## Research Topic\n## Abstract\n## Introduction\n## Literature Review\n"
+        f"## Theoretical Framework\n## Methodology\n## Main Findings / Discussion\n"
+        f"## Conclusion\n## References\n"
         f"Under References, list exactly 12 realistic academic references. "
-        f"Respond ONLY with markdown content. No preamble."
+        f"Maintain a scholarly tone. Respond ONLY with markdown content. No preamble."
     )
     try:
-        response = client.models.generate_content(model=model_id, contents=system_instruction)
+        response = client.models.generate_content(
+            model=model_id, 
+            contents=system_instruction,
+            config={'max_output_tokens': 8192, 'temperature': 0.7}
+        )
         if response.candidates and len(response.candidates) > 0:
             if response.candidates[0].finish_reason == 3:
                 return "ERROR: Restricted by safety filters."
@@ -110,7 +117,11 @@ def generate_gemini_paper(topic, language):
             # Try fallback models for real paper generation
             for fb_model in fallback_models:
                 try:
-                    fb_response = client.models.generate_content(model=fb_model, contents=system_instruction)
+                    fb_response = client.models.generate_content(
+                        model=fb_model, 
+                        contents=system_instruction,
+                        config={'max_output_tokens': 8192, 'temperature': 0.7}
+                    )
                     if fb_response.text:
                         return fb_response.text
                 except:
