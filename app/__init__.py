@@ -58,3 +58,8 @@ def create_app():
         db.create_all()
 
     return app
+
+# Add this to handle Render's default 'gunicorn app:app' command
+# It creates a global instance that is only exported when the package is imported
+if os.environ.get('RENDER'):
+    app = create_app()
