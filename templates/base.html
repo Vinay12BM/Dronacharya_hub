@@ -155,26 +155,34 @@
      MOBILE BOTTOM NAVIGATION (App Style)
      Visible on phones and tablets (< 1024px)
 ═══════════════════════════════════════════ -->
-<nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-2 flex justify-between items-center shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-1 py-2 flex justify-around items-center shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
   <a href="{{ url_for('home') }}" class="flex flex-col items-center gap-1 {% if request.endpoint == 'home' %}text-blue-600{% else %}text-gray-500{% endif %}">
     <span class="text-xl">🏠</span>
-    <span class="text-[10px] font-bold">Home</span>
+    <span class="text-[9px] font-bold">Home</span>
   </a>
   <a href="{{ url_for('tutor.welcome') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'tutor' %}text-blue-600{% else %}text-gray-500{% endif %}">
     <span class="text-xl">🎓</span>
-    <span class="text-[10px] font-bold">Tutor</span>
+    <span class="text-[9px] font-bold">Tutor</span>
   </a>
   <a href="{{ url_for('research.index') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'research' %}text-violet-600{% else %}text-gray-500{% endif %}">
     <span class="text-xl">📄</span>
-    <span class="text-[10px] font-bold">Research</span>
+    <span class="text-[9px] font-bold">Research</span>
+  </a>
+  <a href="{{ url_for('scholarships.index') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'scholarships' %}text-amber-600{% else %}text-gray-500{% endif %}">
+    <span class="text-xl">📜</span>
+    <span class="text-[9px] font-bold">Scholar</span>
+  </a>
+  <a href="{{ url_for('notes.index') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'notes' %}text-indigo-600{% else %}text-gray-500{% endif %}">
+    <span class="text-xl">📝</span>
+    <span class="text-[9px] font-bold">Notes</span>
   </a>
   <a href="{{ url_for('books.index') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'books' %}text-green-600{% else %}text-gray-500{% endif %}">
     <span class="text-xl">📚</span>
-    <span class="text-[10px] font-bold">Books</span>
+    <span class="text-[9px] font-bold">Books</span>
   </a>
   <a href="{{ url_for('games.index') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'games' %}text-orange-600{% else %}text-gray-500{% endif %}">
     <span class="text-xl">🕹️</span>
-    <span class="text-[10px] font-bold">Games</span>
+    <span class="text-[9px] font-bold">Games</span>
   </a>
 </nav>
 
