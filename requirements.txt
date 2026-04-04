@@ -21,3 +21,5 @@ razorpay
 pymupdf
 pikepdf
 pillow
+youtube-transcript-api
+beautifulsoup4

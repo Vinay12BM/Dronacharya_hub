@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}AI Content Summary - Dronacharya Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-12 page-fade-in relative">
+    
+    <!-- Decorative background elements -->
+    <div class="absolute -top-20 -left-20 w-72 h-72 bg-blue-400/20 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+    <div class="absolute top-40 -right-20 w-96 h-96 bg-purple-400/20 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+
+    <div class="text-center space-y-4 mb-12">
+        <h1 class="text-4xl md:text-5xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">
+            AI Content Summary
+        </h1>
+        <p class="text-gray-500 max-w-2xl mx-auto text-lg">
+            Paste any YouTube Video or Article link below. Our AI will give you a complete, easy-to-understand summary in your preferred language without complex words.
+        </p>
+    </div>
+
+    <!-- Main Input Card -->
+    <div class="bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl rounded-[32px] p-6 sm:p-10 mb-12 relative overflow-hidden group">
+        <!-- Magic glow effect on hover -->
+        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-purple-500/10 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 -z-10 blur-xl"></div>
+        
+        <form id="summary-form" class="space-y-6">
+            <div>
+                <label for="url" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Enter Link (YouTube or Website)</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="text-gray-400 text-xl">🔗</span>
+                    </div>
+                    <input type="url" id="url" name="url" required placeholder="https://www.youtube.com/watch?v=..." 
+                           class="w-full pl-12 pr-4 py-4 bg-gray-50/50 border-2 border-gray-200 rounded-2xl focus:ring-0 focus:border-indigo-500 outline-none transition-all text-lg shadow-inner">
+                </div>
+            </div>
+
+            <div>
+                <label for="language" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Select Language</label>
+                <select id="language" name="language" 
+                        class="w-full px-4 py-4 bg-gray-50/50 border-2 border-gray-200 rounded-2xl focus:ring-0 focus:border-indigo-500 outline-none transition-all text-lg cursor-pointer appearance-none shadow-inner font-medium">
+                    <option value="English">🇬🇧 English</option>
+                    <option value="Kannada">🇮🇳 Kannada (ಕನ್ನಡ)</option>
+                    <option value="Hindi">🇮🇳 Hindi (हिन्दी)</option>
+                </select>
+                <!-- Custom arrow for select -->
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 mt-[100px] sm:mt-[76px] text-gray-500">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" id="summarize-btn" class="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xl rounded-2xl shadow-xl hover:shadow-2xl transform active:scale-[0.98] transition-all relative overflow-hidden group">
+                    <span id="btn-text">✨ Summarize For Me</span>
+                    <div class="absolute inset-0 h-full w-0 bg-white/20 group-hover:w-full transition-all duration-300 ease-out"></div>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="hidden text-center py-16 animation-pulse">
+        <div class="inline-block relative w-20 h-20">
+            <div class="absolute inset-0 rounded-full border-t-4 border-indigo-600 animate-spin"></div>
+            <div class="absolute inset-2 rounded-full border-r-4 border-blue-400 animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-2xl animate-bounce">🧠</div>
+        </div>
+        <h3 class="mt-6 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Reading content and generating simple summary...</h3>
+        <p class="text-gray-500 mt-2">This usually takes about 10-15 seconds.</p>
+    </div>
+
+    <!-- Result Area -->
+    <div id="result-container" class="hidden opacity-0 transform translate-y-4 transition-all duration-500">
+        <h3 class="text-2xl font-black text-gray-800 mb-6 flex items-center gap-3">
+            <span class="bg-indigo-100 text-indigo-600 p-2 rounded-xl">📄</span> Your Summary
+        </h3>
+        
+        <div class="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-500 to-indigo-600"></div>
+            
+            <div id="summary-content" class="prose prose-lg prose-indigo max-w-none text-gray-700 space-y-6">
+                <!-- Content injected here -->
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end gap-3">
+                <button onclick="copyToClipboard()" class="px-5 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-xl border border-gray-200 transition-colors flex items-center gap-2">
+                    📋 Copy Text
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+document.getElementById('summary-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const url = document.getElementById('url').value;
+    const language = document.getElementById('language').value;
+    const btnText = document.getElementById('btn-text');
+    const loading = document.getElementById('loading');
+    const resultContainer = document.getElementById('result-container');
+    const summaryContent = document.getElementById('summary-content');
+    
+    if(!url) return;
+
+    // Reset UI
+    btnText.innerHTML = "Processing...";
+    document.getElementById('summarize-btn').disabled = true;
+    resultContainer.classList.add('hidden', 'opacity-0', 'translate-y-4');
+    loading.classList.remove('hidden');
+    summaryContent.innerHTML = "";
+
+    try {
+        const response = await fetch("{{ url_for('tutor.api_generate_summary') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ url: url, language: language })
+        });
+        
+        const data = await response.json();
+        
+        loading.classList.add('hidden');
+        
+        if (data.success) {
+            // Render Markdown
+            summaryContent.innerHTML = marked.parse(data.summary);
+            
+            // Show result with animation
+            resultContainer.classList.remove('hidden');
+            setTimeout(() => {
+                resultContainer.classList.remove('opacity-0', 'translate-y-4');
+            }, 50);
+            
+            // Scroll to result
+            setTimeout(() => {
+                resultContainer.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            }, 300);
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch (err) {
+        loading.classList.add('hidden');
+        alert("Something went wrong processing your request.");
+        console.error(err);
+    } finally {
+        btnText.innerHTML = "✨ Summarize For Me";
+        document.getElementById('summarize-btn').disabled = false;
+    }
+});
+
+function copyToClipboard() {
+    const text = document.getElementById('summary-content').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        alert("Summary copied to clipboard!");
+    });
+}
+</script>
+{% endblock %}

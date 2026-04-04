@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ classroom.name }} - Classroom{% endblock %}
+
+{% block content %}
+<div class="bg-teal-50/80 backdrop-blur-md border-b border-teal-100 sticky top-[64px] z-40">
+    <div class="max-w-7xl mx-auto px-4 flex items-center gap-4 overflow-x-auto whitespace-nowrap scrollbar-hide py-3">
+        <a href="{{ url_for('classroom.index') }}" class="font-bold text-gray-500 hover:text-teal-600 mr-4">⬅️ Back</a>
+        
+        <a href="{{ url_for('classroom.stream', id=classroom.id) }}" class="font-bold pb-1 transition-all border-b-2 {% if request.endpoint == 'classroom.stream' %}text-teal-600 border-teal-600{% else %}text-gray-500 border-transparent hover:text-teal-600{% endif %}">Stream</a>
+        
+        <a href="{{ url_for('classroom.classwork', id=classroom.id) }}" class="font-bold pb-1 transition-all border-b-2 {% if request.endpoint == 'classroom.classwork' or request.endpoint == 'classroom.assignment_detail' %}text-teal-600 border-teal-600{% else %}text-gray-500 border-transparent hover:text-teal-600{% endif %}">Classwork</a>
+        
+        <a href="{{ url_for('classroom.people', id=classroom.id) }}" class="font-bold pb-1 transition-all border-b-2 {% if request.endpoint == 'classroom.people' %}text-teal-600 border-teal-600{% else %}text-gray-500 border-transparent hover:text-teal-600{% endif %}">People</a>
+    </div>
+</div>
+
+<div class="max-w-5xl mx-auto mt-6 px-4">
+    <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-2xl h-48 sm:h-64 flex flex-col justify-end p-6 shadow-lg mb-8 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-black/20"></div>
+        <div class="relative z-10">
+            <h1 class="text-3xl sm:text-4xl font-bold mb-2">{{ classroom.name }}</h1>
+            <p class="text-teal-100 text-lg">{{ classroom.description }}</p>
+        </div>
+        {% if is_instructor %}
+        <div class="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur text-white px-4 py-2 rounded-xl text-sm font-semibold border border-white/30 shadow-sm flex items-center gap-2">
+            Class Code: <span class="text-xl tracking-wider select-all">{{ classroom.join_code }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% block classroom_content %}{% endblock %}
+</div>
+{% endblock %}

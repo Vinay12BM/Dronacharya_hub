@@ -1,0 +1,78 @@
+{% extends "classroom/base_classroom.html" %}
+
+{% block classroom_content %}
+<div class="mb-8 border-b pb-8">
+    <div class="flex items-start gap-4 mb-4">
+        <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800">{{ assignment.title }}</h2>
+            <div class="text-sm font-bold text-red-500 mt-1">
+                {% if assignment.due_date %} Due {{ assignment.due_date.strftime('%b %d, %H:%M') }} {% else %} No due date {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="prose max-w-none text-gray-700 ml-[64px]">
+        {{ assignment.description }}
+    </div>
+</div>
+
+<h3 class="text-xl font-bold mb-6">Student Submissions (<span class="text-teal-600">{{ submissions|length }}</span>/{{ classroom.members|length }})</h3>
+
+<div class="grid md:grid-cols-2 gap-6">
+    {% for submission in submissions %}
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="p-5 flex-grow border-b flex justify-between items-start">
+            <div class="flex items-center gap-3 mb-4">
+                <img src="{% if submission.student.profile_pic.startswith('http') %}{{ submission.student.profile_pic }}{% else %}{{ url_for('static', filename='uploads/' + submission.student.profile_pic) }}{% endif %}" class="w-10 h-10 rounded-full object-cover">
+                <div>
+                    <h4 class="font-bold text-gray-800">{{ submission.student.username }}</h4>
+                    <span class="text-xs text-gray-500 font-medium">Turned in {{ submission.submitted_at.strftime('%b %d, %H:%M') }}</span>
+                </div>
+            </div>
+            {% if submission.grade %}
+                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Graded: {{ submission.grade }}</span>
+            {% else %}
+                <span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold">Needs Grading</span>
+            {% endif %}
+        </div>
+        
+        <div class="p-5 bg-gray-50 flex-grow">
+            {% if submission.file_path %}
+            <a href="{{ url_for('static', filename=submission.file_path) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:shadow-sm transition mb-3 w-full">
+                <span class="text-red-500">📄</span> <span class="text-sm font-bold truncate">{{ submission.file_path.split('/')[-1] }}</span>
+            </a>
+            {% endif %}
+            
+            {% if submission.text_content %}
+            <div class="text-sm text-gray-700 bg-white p-3 rounded-xl border border-gray-200 min-h-[60px] line-clamp-3">
+                {{ submission.text_content }}
+            </div>
+            {% endif %}
+
+            {% if not submission.file_path and not submission.text_content %}
+            <div class="text-sm text-gray-400 italic">No content provided.</div>
+            {% endif %}
+        </div>
+
+        <div class="p-4 bg-white border-t border-gray-100">
+            <form action="{{ url_for('classroom.grade_submission', submission_id=submission.id) }}" method="POST" class="flex flex-col gap-2">
+                <div class="flex gap-2">
+                    <input type="text" name="grade" placeholder="Grade (e.g. 95/100)" value="{{ submission.grade or '' }}" required class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-teal-500 outline-none">
+                </div>
+                <textarea name="feedback" rows="1" placeholder="Add private feedback..." class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-teal-500 outline-none resize-none">{{ submission.feedback or '' }}</textarea>
+                <div class="flex justify-end mt-1">
+                    <button type="submit" class="px-4 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-sm hover:bg-teal-700 transition">Save Grade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-span-2 text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-300 transition-all">
+        <h3 class="text-lg font-bold text-gray-600">No submissions yet</h3>
+        <p class="text-gray-500 text-sm mt-1">Wait for your students to submit their work.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "classroom/base_classroom.html" %}
+
+{% block classroom_content %}
+<div class="grid md:grid-cols-[1fr_3fr] gap-6">
+    <!-- Left Sidebar -->
+    <div>
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm mb-6">
+            <h3 class="font-bold mb-2">Upcoming</h3>
+            <p class="text-sm text-gray-500 mb-4">No work due soon</p>
+            <a href="{{ url_for('classroom.classwork', id=classroom.id) }}" class="text-teal-600 text-sm font-medium hover:underline">View all</a>
+        </div>
+    </div>
+
+    <!-- Main Stream -->
+    <div class="flex flex-col gap-6">
+        
+        <!-- Post Create Form -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all focus-within:shadow-md">
+            <form action="{{ url_for('classroom.create_post', id=classroom.id) }}" method="POST" class="p-4">
+                <div class="flex gap-4">
+                    <img src="{% if current_user.profile_pic.startswith('http') %}{{ current_user.profile_pic }}{% else %}{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}{% endif %}" class="w-10 h-10 rounded-full object-cover">
+                    <div class="flex-grow">
+                        <textarea name="content" rows="1" placeholder="Announce something to your class" class="w-full mt-1 border-b-2 border-transparent hover:border-gray-200 focus:border-teal-500 focus:outline-none resize-none transition-colors " onfocus="this.rows=3; document.getElementById('post-actions').classList.remove('hidden')"></textarea>
+                    </div>
+                </div>
+                <div id="post-actions" class="hidden mt-4 flex justify-end gap-2 border-t pt-4">
+                    <button type="button" onclick="this.closest('form').reset(); this.closest('textarea').rows=1; document.getElementById('post-actions').classList.add('hidden')" class="px-4 py-2 hover:bg-gray-100 rounded-lg text-sm font-medium text-gray-600 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-sm transition">Post</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Posts List -->
+        {% for post in posts %}
+        <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center gap-3 mb-4">
+                <img src="{% if post.author.profile_pic.startswith('http') %}{{ post.author.profile_pic }}{% else %}{{ url_for('static', filename='uploads/' + post.author.profile_pic) }}{% endif %}" class="w-10 h-10 rounded-full object-cover">
+                <div>
+                    <div class="font-bold text-gray-800">{{ post.author.username }}</div>
+                    <div class="text-[11px] text-gray-500 font-medium">{{ post.created_at.strftime('%b %d') }}</div>
+                </div>
+            </div>
+            <div class="text-gray-700 whitespace-pre-wrap ml-1">{{ post.content }}</div>
+        </div>
+        {% else %}
+        <div class="text-center py-10">
+            <p class="text-gray-500">This is where you can talk to your class.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -141,3 +141,60 @@ def haversine_km(lat1, lon1, lat2, lon2):
     dlon = math.radians(lon2 - lon1)
     a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
     return R * 2 * math.asin(math.sqrt(a))
+
+# ─────────────────────────────────────────
+# CLASSROOM MODELS
+# ─────────────────────────────────────────
+
+class Classroom(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id            = db.Column(db.Integer, primary_key=True)
+    name          = db.Column(db.String(200), nullable=False)
+    description   = db.Column(db.Text, default='')
+    join_code     = db.Column(db.String(20), unique=True, nullable=False)
+    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+    instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    instructor    = db.relationship('User', foreign_keys=[instructor_id], backref=db.backref('classrooms_taught', lazy=True))
+    members       = db.relationship('ClassroomMember', backref='classroom_parent', lazy=True, cascade="all, delete-orphan")
+    posts         = db.relationship('ClassroomPost', backref='classroom_parent', lazy=True, cascade="all, delete-orphan")
+    assignments   = db.relationship('ClassroomAssignment', backref='classroom_parent', lazy=True, cascade="all, delete-orphan")
+
+class ClassroomMember(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id           = db.Column(db.Integer, primary_key=True)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
+    user_id      = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    joined_at    = db.Column(db.DateTime, default=datetime.utcnow)
+    role         = db.Column(db.String(20), default='student') # student or teacher
+    user         = db.relationship('User', foreign_keys=[user_id], backref=db.backref('classroom_memberships', lazy=True))
+
+class ClassroomPost(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id           = db.Column(db.Integer, primary_key=True)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
+    author_id    = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content      = db.Column(db.Text, nullable=False)
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    author       = db.relationship('User', foreign_keys=[author_id], backref=db.backref('classroom_posts', lazy=True))
+
+class ClassroomAssignment(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id           = db.Column(db.Integer, primary_key=True)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
+    title        = db.Column(db.String(200), nullable=False)
+    description  = db.Column(db.Text, default='')
+    due_date     = db.Column(db.DateTime, nullable=True)
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    submissions  = db.relationship('AssignmentSubmission', backref='assignment_parent', lazy=True, cascade="all, delete-orphan")
+
+class AssignmentSubmission(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id            = db.Column(db.Integer, primary_key=True)
+    assignment_id = db.Column(db.Integer, db.ForeignKey('classroom_assignment.id'), nullable=False)
+    student_id    = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    file_path     = db.Column(db.String(200), nullable=True) # PDF/img etc, optional if text only
+    text_content  = db.Column(db.Text, default='') # Optional text submission
+    grade         = db.Column(db.String(20), nullable=True)
+    feedback      = db.Column(db.Text, default='')
+    submitted_at  = db.Column(db.DateTime, default=datetime.utcnow)
+    student       = db.relationship('User', foreign_keys=[student_id], backref=db.backref('assignment_submissions', lazy=True))

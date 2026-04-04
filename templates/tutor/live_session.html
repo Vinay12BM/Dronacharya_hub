@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+
+{% block title %}Live Session - Dronacharya Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8 page-fade-in relative">
+
+{% if not session_id %}
+    <!-- LOBBY INTERFACE -->
+    <div class="min-h-[60vh] flex flex-col items-center justify-center text-center">
+        <div class="mb-8">
+            <h1 class="text-4xl md:text-5xl font-black tracking-tight text-gray-800 mb-4">
+                Dronacharya <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Live</span>
+            </h1>
+            <p class="text-gray-500 text-lg max-w-2xl mx-auto">Premium video meetings with <strong class="text-gray-800">live AI translation</strong> and <strong class="text-gray-800">auto-summaries</strong>. Start a new meeting or join one below.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-[32px] shadow-2xl border border-gray-100 max-w-md w-full relative overflow-hidden">
+            <!-- decorative blur -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-red-400/10 rounded-full blur-2xl"></div>
+            
+            <button onclick="startNewMeeting()" class="w-full py-4 text-white font-bold text-lg rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 shadow-xl hover:shadow-2xl transition transform hover:-translate-y-1 flex items-center justify-center gap-3 mb-6">
+                <span class="text-2xl">📹</span> Start a New Meeting
+            </button>
+
+            <div class="flex items-center gap-4 my-6">
+                <div class="flex-grow h-px bg-gray-200"></div>
+                <span class="text-gray-400 font-bold uppercase text-xs tracking-widest">OR</span>
+                <div class="flex-grow h-px bg-gray-200"></div>
+            </div>
+
+            <form onsubmit="joinMeeting(event)" class="flex flex-col gap-3">
+                <input type="text" id="join-code" placeholder="Enter meeting code or link" required class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-5 py-4 focus:ring-0 focus:border-red-400 outline-none text-center font-mono font-bold text-gray-700 transition" />
+                <button type="submit" class="w-full py-4 text-gray-700 font-bold rounded-2xl bg-gray-100 hover:bg-gray-200 transition border border-gray-200 flex items-center justify-center gap-2">
+                    Join Meeting
+                </button>
+            </form>
+        </div>
+    </div>
+    <script>
+        function startNewMeeting() {
+            const randomId = 'DH-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            window.location.href = "{{ url_for('tutor.live_session') }}/" + randomId + "?host=true";
+        }
+
+        function joinMeeting(e) {
+            e.preventDefault();
+            let code = document.getElementById('join-code').value.trim();
+            if(!code) return;
+            // if user pasted a full link, extract the ID
+            if(code.includes('/tutor/live-session/')) {
+                const parts = code.split('/tutor/live-session/');
+                code = parts[1].split('?')[0]; // clean URL params
+            }
+            window.location.href = "{{ url_for('tutor.live_session') }}/" + code;
+        }
+    </script>
+
+{% else %}
+    <!-- ACTUAL MEETING INTERFACE -->
+    <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 text-gray-800">
+                <span class="relative flex h-5 w-5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-5 w-5 bg-red-500"></span>
+                </span>
+                Live Session
+            </h1>
+            <p class="text-gray-500 mt-2">Teach, Present, and auto-translate your speech in real-time!</p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-4">
+            <!-- Share Link Component -->
+            <div id="share-link-card" class="bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
+                <div class="text-[10px] uppercase font-bold text-gray-400 tracking-widest block">Meeting Code</div>
+                <div id="session-code-display" class="font-mono font-bold text-gray-800 bg-gray-50 px-3 py-1 rounded-lg border border-gray-200">
+                    {{ session_id or '...' }}
+                </div>
+                <button onclick="copyMeetingLink()" class="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors" title="Copy Invitation Link">
+                    🔗
+                </button>
+            </div>
+
+            <div class="flex items-center gap-4 bg-white px-5 py-3 rounded-2xl shadow-sm border border-gray-100">
+                <label class="font-bold text-gray-700 text-sm tracking-wide">Translate to:</label>
+                <select id="target-lang" class="bg-gray-50 border border-gray-200 text-gray-800 font-bold rounded-xl px-4 py-2 focus:ring-0 focus:border-red-400 outline-none cursor-pointer">
+                    <option value="English">🇬🇧 English</option>
+                    <option value="Kannada">🇮🇳 Kannada (ಕನ್ನಡ)</option>
+                    <option value="Hindi">🇮🇳 Hindi (हिन्दी)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Video Feed Left Side -->
+        <div class="lg:col-span-2 space-y-4">
+            <div class="bg-black rounded-[32px] overflow-hidden aspect-video shadow-2xl relative border-4 border-gray-900 group">
+                <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover transform -scale-x-100"></video>
+                
+                <!-- Status Overlay overlay -->
+                <div id="status-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-300 z-10 text-white">
+                    <div class="text-6xl mb-4">🎥</div>
+                    <h3 class="text-2xl font-bold">Camera is Off</h3>
+                    <p class="text-gray-400 mt-2">Click Start below to begin your session</p>
+                </div>
+
+                <!-- Overlay Name -->
+                <div class="absolute bottom-4 left-4 bg-black/50 backdrop-blur-md px-4 py-2 rounded-xl text-white font-medium text-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <img src="{% if current_user.profile_pic.startswith('http') %}{{ current_user.profile_pic }}{% else %}{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}{% endif %}" class="w-6 h-6 rounded-full" alt="Avatar">
+                    {{ current_user.first_name }} {{ current_user.last_name }} 
+                    <span class="bg-red-500 px-2 py-0.5 rounded-full text-[10px] ml-2 font-bold animate-pulse">HOST</span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center justify-center gap-4 bg-white p-4 rounded-[24px] shadow-sm border border-gray-100">
+                <button id="btn-start" class="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg border border-transparent transition-all flex justify-center items-center gap-2">
+                    ▶️ Start Broadcast
+                </button>
+                <button id="btn-mic" disabled class="w-14 h-14 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full flex items-center justify-center text-xl transition-all disabled:opacity-50 border border-gray-200">
+                    🎤
+                </button>
+                <button id="btn-end" disabled class="flex-1 py-3 px-6 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50 flex justify-center items-center gap-2 border border-red-600">
+                    ⏹ End & Summarize
+                </button>
+            </div>
+        </div>
+
+        <!-- Transcript Right Side -->
+        <div class="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden flex flex-col h-[500px] lg:h-auto z-10">
+            <div class="bg-gray-50 border-b border-gray-100 p-5 flex items-center gap-3">
+                <div class="p-2 bg-blue-100 rounded-lg text-blue-600 text-lg">📝</div>
+                <div>
+                    <h3 class="font-bold text-gray-800">Live Transcript & Translation</h3>
+                    <p class="text-xs text-gray-500" id="translating-to-text">Translating to English...</p>
+                </div>
+            </div>
+            
+            <div id="transcript-box" class="flex-grow p-6 overflow-y-auto space-y-4 bg-white scroll-smooth relative">
+                <div class="text-center text-gray-400 text-sm mt-10 italic" id="placeholder-text">
+                    Waiting for speech...
+                </div>
+                <!-- Transcripts go here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Modal -->
+<div id="summary-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center px-4 transition-opacity">
+    <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-8 relative scale-95 transform transition-transform duration-300" id="modal-content">
+        <button id="close-modal" class="absolute top-6 right-6 text-2xl text-gray-400 hover:text-gray-700 transition">✖</button>
+        
+        <div id="modal-loading" class="py-20 text-center">
+            <div class="inline-block animate-spin text-5xl text-blue-500 mb-6">⚙️</div>
+            <h2 class="text-2xl font-bold">Generating Session Summary...</h2>
+            <p class="text-gray-500 mt-2">Analyzing your live transcript.</p>
+        </div>
+
+        <div id="modal-result" class="hidden">
+            <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
+                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-3xl">📊</div>
+                <div>
+                    <h2 class="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Session Complete</h2>
+                    <p class="text-gray-500">Your live class has been summarized successfully.</p>
+                </div>
+            </div>
+
+            <div class="prose prose-blue max-w-none text-gray-700 bg-gray-50 p-6 rounded-2xl border border-gray-200" id="summary-content">
+                <!-- Summary markdown here -->
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row gap-4 justify-end">
+                <form method="POST" action="{{ url_for('tutor.download_live_doc') }}" class="inline">
+                    <input type="hidden" name="transcript" id="hidden-transcript">
+                    <input type="hidden" name="summary" id="hidden-summary">
+                    <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2">
+                        📥 Download Full Report (TXT)
+                    </button>
+                </form>
+                <button id="btn-done" class="px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script>
+    const videoElem = document.getElementById('webcam');
+    const btnStart = document.getElementById('btn-start');
+    const btnEnd = document.getElementById('btn-end');
+    const btnMic = document.getElementById('btn-mic');
+    const statusOverlay = document.getElementById('status-overlay');
+    const transcriptBox = document.getElementById('transcript-box');
+    const targetLangSelect = document.getElementById('target-lang');
+    const translatingToText = document.getElementById('translating-to-text');
+    const codeDisplay = document.getElementById('session-code-display');
+    
+    let localStream = null;
+    let peer = null;
+    let recognition = null;
+    let isBroadcasting = false;
+    let isMicMuted = false;
+    let fullTranscript = "";
+    let finalSummaryStr = "";
+
+    // Meeting Code Logic
+    const urlSessionId = "{{ session_id or '' }}";
+    const isHost = new URLSearchParams(window.location.search).get('host') === 'true'; 
+    
+    // Host uses a random ID or its own, Attendee uses random but calls the URL ID
+    const myPeerId = isHost ? urlSessionId : ('GUEST-' + Math.random().toString(36).substr(2, 6).toUpperCase());
+    const meetingCode = urlSessionId || myPeerId;
+    
+    codeDisplay.innerText = meetingCode;
+    
+    if(!isHost) {
+        document.querySelector('.bg-red-500').innerText = "ATTENDEE";
+        document.querySelector('.bg-red-500').classList.replace('bg-red-500', 'bg-blue-500');
+        btnStart.innerHTML = "🔗 Connecting to Session...";
+        btnStart.classList.replace('from-green-500', 'from-blue-500');
+    }
+
+    // Initialize PeerJS
+    peer = new Peer(myPeerId, { debug: 1 });
+
+    peer.on('open', (id) => {
+        console.log('My Peer ID:', id);
+        if(!isHost) {
+            connectToHost(meetingCode);
+        }
+    });
+
+    // Host receives call
+    peer.on('call', (incomingCall) => {
+        if(isHost && localStream) {
+            incomingCall.answer(localStream);
+        }
+    });
+
+    async function connectToHost(hostId) {
+        btnStart.innerHTML = "🔗 Connecting...";
+        statusOverlay.querySelector('h3').innerText = "Waiting for Host...";
+        
+        let connected = false;
+        
+        const tryCall = () => {
+            if(connected || isHost) return;
+            
+            console.log("Attempting to connect to host...", hostId);
+            const call = peer.call(hostId, new MediaStream()); // trigger host
+            
+            if(call) {
+                call.on('stream', (remoteStream) => {
+                    console.log("Stream received!");
+                    videoElem.srcObject = remoteStream;
+                    statusOverlay.classList.add('opacity-0', 'pointer-events-none');
+                    btnStart.innerHTML = "📺 Viewing Live";
+                    btnStart.classList.replace('from-blue-500', 'from-green-500');
+                    btnStart.classList.add('pointer-events-none'); // disable clicking
+                    connected = true;
+                });
+                
+                call.on('error', (err) => console.log("Call error:", err));
+                call.on('close', () => { connected = false; });
+            }
+            
+            // Aggressively retry if not connected
+            setTimeout(() => {
+                if(!connected) {
+                    if(call) call.close();
+                    tryCall();
+                }
+            }, 4000);
+        };
+        tryCall();
+    }
+
+    function copyMeetingLink() {
+        const link = window.location.origin + "/tutor/live-session/" + meetingCode;
+        navigator.clipboard.writeText(link).then(() => {
+            alert("Meeting Link Copied! Send this to your students: " + link);
+        });
+    }
+
+    // Speech Recognition setup (Web Speech API)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    targetLangSelect.addEventListener('change', (e) => {
+        translatingToText.innerText = `Translating to ${e.target.value}...`;
+    });
+
+    async function startBroadcast() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            videoElem.srcObject = localStream;
+            statusOverlay.classList.add('opacity-0', 'pointer-events-none');
+            
+            btnStart.disabled = true;
+            btnStart.classList.replace('from-green-500', 'from-gray-400');
+            btnStart.innerHTML = "🔴 Live";
+            
+            btnEnd.disabled = false;
+            btnMic.disabled = false;
+            targetLangSelect.disabled = true;
+            
+            isBroadcasting = true;
+            document.getElementById('placeholder-text').style.display = 'none';
+
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                
+                recognition.onresult = async (event) => {
+                    const lastResultIndex = event.results.length - 1;
+                    const text = event.results[lastResultIndex][0].transcript.trim();
+                    
+                    if(text) {
+                        fullTranscript += text + ". ";
+                        appendBubble(text, true); // User speech bubble
+                        translateAndAppend(text); // Trigger API
+                    }
+                };
+
+                recognition.onerror = (e) => console.log("Speech Res Error", e);
+                // Auto restart recognition if it stops organically during live session
+                recognition.onend = () => { if(isBroadcasting && !isMicMuted) recognition.start() }; 
+                recognition.start();
+            } else {
+                appendBubble("Browser does not support Speech Recognition.", false);
+            }
+        } catch (err) {
+            alert("Camera/Mic access required for Live Session.");
+            console.error(err);
+        }
+    }
+
+    async function translateAndAppend(text) {
+        const tgtLang = targetLangSelect.value;
+        const bubbleId = 'trans_' + Date.now();
+        
+        // Add skeleton loader bubble
+        const div = document.createElement('div');
+        div.className = "flex justify-end pr-2 transition-all duration-300";
+        div.id = bubbleId;
+        div.innerHTML = `
+            <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-2xl rounded-tr-none max-w-[80%] shadow-sm text-sm text-indigo-800 animate-pulse">
+                ...
+            </div>
+        `;
+        transcriptBox.appendChild(div);
+        transcriptBox.scrollTop = transcriptBox.scrollHeight;
+
+        try {
+            const response = await fetch("{{ url_for('tutor.api_live_translate') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: text, language: tgtLang })
+            });
+            const data = await response.json();
+            
+            const realBubble = document.getElementById(bubbleId);
+            if(data.success && realBubble) {
+                realBubble.innerHTML = `
+                    <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-2xl rounded-tr-none max-w-[80%] shadow-sm text-sm text-indigo-800 font-medium">
+                        ${data.translation}
+                    </div>
+                `;
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function appendBubble(text, isOriginal) {
+        const div = document.createElement('div');
+        div.className = "flex items-start gap-2 pl-2 transition-all duration-300 transform translate-y-2 opacity-0";
+        div.innerHTML = `
+            <div class="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none max-w-[85%] shadow-sm text-sm text-gray-800">
+                ${text}
+            </div>
+        `;
+        transcriptBox.appendChild(div);
+        
+        // Animate in
+        setTimeout(()=>{
+            div.classList.remove('translate-y-2', 'opacity-0');
+            transcriptBox.scrollTop = transcriptBox.scrollHeight;
+        }, 10);
+    }
+
+    async function stopBroadcast() {
+        isBroadcasting = false;
+        if(recognition) {
+            recognition.onend = null;
+            recognition.stop();
+        }
+        
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            videoElem.srcObject = null;
+        }
+
+        statusOverlay.classList.remove('opacity-0', 'pointer-events-none');
+        btnStart.disabled = false;
+        btnStart.classList.replace('from-gray-400', 'from-green-500');
+        btnStart.innerHTML = "▶️ Start Broadcast";
+        
+        btnEnd.disabled = true;
+        btnMic.disabled = true;
+        targetLangSelect.disabled = false;
+
+        // Show Summary
+        showSummaryModal();
+    }
+
+    async function showSummaryModal() {
+        const modal = document.getElementById('summary-modal');
+        const modalContent = document.getElementById('modal-content');
+        const mLoading = document.getElementById('modal-loading');
+        const mResult = document.getElementById('modal-result');
+        const summaryBox = document.getElementById('summary-content');
+
+        modal.classList.remove('hidden');
+        mLoading.classList.remove('hidden');
+        mResult.classList.add('hidden');
+        
+        setTimeout(() => modalContent.classList.remove('scale-95'), 50);
+
+        try {
+            const response = await fetch("{{ url_for('tutor.api_live_summary') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ transcript: fullTranscript, language: targetLangSelect.value })
+            });
+            const data = await response.json();
+            
+            mLoading.classList.add('hidden');
+            mResult.classList.remove('hidden');
+
+            if(data.success) {
+                finalSummaryStr = data.summary;
+                summaryBox.innerHTML = marked.parse(data.summary);
+                document.getElementById('hidden-transcript').value = fullTranscript;
+                document.getElementById('hidden-summary').value = finalSummaryStr;
+            } else {
+                summaryBox.innerHTML = `<p class="text-red-500">Error: ${data.message}</p><p>Partial Transcript: ${fullTranscript}</p>`;
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Error finalizing session summary.");
+            closeSummary();
+        }
+    }
+
+    function closeSummary() {
+        const modal = document.getElementById('summary-modal');
+        const modalContent = document.getElementById('modal-content');
+        modalContent.classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+        fullTranscript = ""; // Reset for next session
+        transcriptBox.innerHTML = '<div class="text-center text-gray-400 text-sm mt-10 italic" id="placeholder-text">Waiting for speech...</div>';
+    }
+
+    // Handlers
+    btnStart.addEventListener('click', startBroadcast);
+    btnEnd.addEventListener('click', stopBroadcast);
+    
+    document.getElementById('close-modal').addEventListener('click', closeSummary);
+    document.getElementById('btn-done').addEventListener('click', closeSummary);
+
+    btnMic.addEventListener('click', () => {
+        if(localStream) {
+            const audioTrack = localStream.getAudioTracks()[0];
+            if(audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                isMicMuted = !audioTrack.enabled;
+                btnMic.innerHTML = isMicMuted ? '🔇' : '🎤';
+                btnMic.classList.toggle('bg-red-100', isMicMuted);
+                btnMic.classList.toggle('text-red-600', isMicMuted);
+                
+                if(isMicMuted && recognition) recognition.stop();
+                if(!isMicMuted && recognition && isBroadcasting) recognition.start();
+            }
+        }
+    });
+
+    // Auto-start camera if we are the host that just created the room
+    window.addEventListener('DOMContentLoaded', () => {
+        if(isHost && !isBroadcasting) {
+            // Add a small delay for better UX
+            setTimeout(() => {
+                startBroadcast();
+            }, 500);
+        }
+    });
+
+</script>
+{% endblock %}

@@ -8,6 +8,37 @@ client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 model_id = 'gemini-flash-latest' 
 fallback_models = ['gemini-flash-lite-latest', 'gemini-pro-latest', 'gemini-2.0-flash']
 
+def generate_with_fallback(prompt, sys_instr=None):
+    import time
+    active_models = [model_id] + fallback_models
+    last_err = None
+    
+    for m in active_models:
+        try:
+            if sys_instr:
+                resp = client.models.generate_content(model=m, contents=prompt, config=types.GenerateContentConfig(system_instruction=sys_instr))
+            else:
+                resp = client.models.generate_content(model=m, contents=prompt)
+            
+            if resp and resp.text: return resp.text
+            
+        except Exception as e:
+            last_err = e
+            e_str = str(e).lower()
+            if "429" in e_str or "quota" in e_str or "limit" in e_str:
+                print(f"Model {m} hit quota. Trying fallback...")
+                time.sleep(1) 
+                continue
+            elif "503" in e_str or "unavailable" in e_str:
+                print(f"Model {m} unavailable. Trying fallback...")
+                time.sleep(1)
+                continue
+            else:
+                # Other error, let's still try to fall back just in case
+                continue
+                
+    raise last_err or Exception("All models failed to generate content.")
+
 # --- AI CACHE SECTION ---
 CACHE_FILE = os.path.join(os.path.dirname(__file__), '_ai_cache.json')
 

@@ -10,6 +10,7 @@ from modules.text_to_speech import generate_tts
 from modules.video_search import search_videos
 from modules.document_generator import create_docx
 from modules.supabase_helper import upload_file_to_supabase
+from modules.summary_helper import generate_ai_summary
 
 @tutor_bp.route('/')
 def welcome():
@@ -384,3 +385,79 @@ def rewards():
         })
         
     return render_template('tutor/rewards.html', coupons=formatted_coupons)
+
+@tutor_bp.route('/summary')
+@login_required
+def summary_page():
+    return render_template('tutor/summary.html')
+
+@tutor_bp.route('/api/generate-summary', methods=['POST'])
+@login_required
+def api_generate_summary():
+    data = request.get_json()
+    url = data.get('url')
+    language = data.get('language', 'English')
+    
+    if not url:
+        return jsonify({'success': False, 'message': 'URL is required'})
+        
+    summary = generate_ai_summary(url, language)
+    return jsonify({'success': True, 'summary': summary})
+
+@tutor_bp.route('/live-session')
+@tutor_bp.route('/live-session/<session_id>')
+@login_required
+def live_session(session_id=None):
+    return render_template('tutor/live_session.html', session_id=session_id)
+
+@tutor_bp.route('/api/live-translate', methods=['POST'])
+@login_required
+def api_live_translate():
+    data = request.get_json()
+    text = data.get('text', '')
+    language = data.get('language', 'English')
+    
+    if not text:
+        return jsonify({'success': False, 'translation': ''})
+        
+    try:
+        from modules.text_generation import generate_with_fallback
+        prompt = f"Translate the following text into {language}. Return ONLY the translated text, no quotation marks, no preamble:\n\n{text}"
+        translated_text = generate_with_fallback(prompt)
+        return jsonify({'success': True, 'translation': translated_text.strip()})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e), 'translation': f'[Error: {str(e)[:20]}]'})
+
+@tutor_bp.route('/api/live-summary', methods=['POST'])
+@login_required
+def api_live_summary():
+    data = request.get_json()
+    transcript = data.get('transcript', '')
+    language = data.get('language', 'English')
+    
+    if not transcript or len(transcript) < 10:
+        return jsonify({'success': False, 'message': 'Transcript too short.'})
+        
+    try:
+        from modules.text_generation import generate_with_fallback
+        prompt = f"Provide a comprehensive structured summary with bullet points of the following live class transcript in {language}:\n\n{transcript[:10000]}"
+        summary_text = generate_with_fallback(prompt)
+        return jsonify({'success': True, 'summary': summary_text})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@tutor_bp.route('/api/download-live-doc', methods=['POST'])
+@login_required
+def download_live_doc():
+    transcript = request.form.get('transcript', '')
+    summary = request.form.get('summary', '')
+    
+    content = f"--- DRONACHARYA HUB LIVE SESSION ---\n\n## SUMMARY ##\n{summary}\n\n## FULL TRANSCRIPT ##\n{transcript}"
+    
+    import io, uuid
+    filename = f"Live_Session_{uuid.uuid4().hex[:6]}.txt"
+    filepath = os.path.join(current_app.config.get('TEMP_FOLDER', '/tmp'), filename)
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(content)
+        
+    return send_file(filepath, as_attachment=True, download_name=filename)
