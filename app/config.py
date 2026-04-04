@@ -15,6 +15,7 @@ class Config:
     UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'static', 'uploads')
     AUDIO_FOLDER  = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'static', 'audio')
     DOCS_FOLDER   = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'static', 'documents')
+    NOTES_FOLDER  = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'static', 'notes')
     TEMP_FOLDER   = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'temp_files')
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf'}
+    MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB

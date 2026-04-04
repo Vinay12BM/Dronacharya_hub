@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Student Notes | Dronacharya Hub{% endblock %}
+
+{% block head %}
+<style>
+  .note-card {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .note-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border-color: rgba(99, 102, 241, 0.5);
+  }
+  .subject-pill {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#070D26] text-white py-20 px-4">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Top Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16" data-aos="fade-up">
+      <div>
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent" style="font-family:'Cinzel', serif;">
+          Handwritten Notes
+        </h1>
+        <p class="text-gray-400">Share your journey. Learn from the community. Together we grow.</p>
+      </div>
+      <a href="{{ url_for('notes.upload') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-2xl font-bold transition shadow-lg shadow-indigo-900/20 w-fit">
+        🚀 Upload Your Notes
+      </a>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="mb-12 flex flex-wrap items-center gap-3">
+        <span class="text-gray-500 text-sm font-semibold uppercase tracking-widest mr-2">Subject Favorites:</span>
+        <button class="filter-btn px-6 py-2 rounded-xl bg-indigo-600 font-bold transition" data-filter="all">All Subjects</button>
+        {% for subject in subjects %}
+        <button class="filter-btn px-6 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/10" data-filter="{{ subject }}">{{ subject }}</button>
+        {% endfor %}
+    </div>
+
+    <!-- Notes Grid -->
+    {% if notes %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="notes-grid">
+      {% for note in notes %}
+      <div class="note-card rounded-2xl p-6 flex flex-col h-full group" data-subject="{{ note.subject }}">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex flex-col">
+            <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter mb-1">{{ note.subject }}</span>
+            <h3 class="text-xl font-bold text-white group-hover:text-indigo-400 transition truncate w-full">{{ note.title }}</h3>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-indigo-900/40 flex items-center justify-center text-xl">
+             {% if note.file_path.endswith('.pdf') %}📄{% else %}🖼️{% endif %}
+          </div>
+        </div>
+
+        <p class="text-sm text-gray-400 line-clamp-3 mb-6 flex-grow leading-relaxed">
+          {{ note.description or "No description provided. A valuable piece of handwritten knowledge shared by the community." }}
+        </p>
+
+        <div class="flex items-center justify-between pt-4 border-t border-white/5">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-bold">
+               {{ note.uploader_name[0]|upper }}
+            </div>
+            <span class="text-xs text-gray-300">{{ note.uploader_name }}</span>
+          </div>
+          <span class="text-[10px] text-gray-500">{{ note.date_uploaded.strftime('%d %b %Y') }}</span>
+        </div>
+        
+        <div class="mt-6 flex gap-2">
+           <a href="{{ url_for('static', filename='notes/' + note.file_path) }}" target="_blank" class="flex-grow text-center py-3 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold transition border border-white/10">
+             View File
+           </a>
+           <a href="{{ url_for('static', filename='notes/' + note.file_path) }}" download class="w-12 flex items-center justify-center bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-xl transition">
+             ⬇️
+           </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-24 text-center">
+       <div class="text-6xl mb-6">📝</div>
+       <h2 class="text-2xl font-bold mb-2">No notes shared yet</h2>
+       <p class="text-gray-500 max-w-md">Be the first to share your notes and help others in our learning journey!</p>
+       <a href="{{ url_for('notes.upload') }}" class="mt-8 text-indigo-400 hover:text-indigo-300 font-bold underline">Start Uploading Now</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.note-card');
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filter = btn.getAttribute('data-filter');
+            
+            filterButtons.forEach(b => {
+                b.classList.remove('bg-indigo-600');
+                b.classList.add('bg-white/5');
+            });
+            btn.classList.add('bg-indigo-600');
+            btn.classList.remove('bg-white/5');
+
+            cards.forEach(card => {
+                if (filter === 'all' || card.getAttribute('data-subject') === filter) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

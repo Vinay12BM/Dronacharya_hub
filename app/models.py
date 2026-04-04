@@ -97,6 +97,20 @@ class Book(db.Model):
     views         = db.Column(db.Integer, default=0)
 
 # ─────────────────────────────────────────
+# NOTES MODEL
+# ─────────────────────────────────────────
+
+class Note(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id            = db.Column(db.Integer, primary_key=True)
+    title         = db.Column(db.String(200), nullable=False)
+    subject       = db.Column(db.String(100), nullable=False)
+    description   = db.Column(db.Text, default='')
+    file_path     = db.Column(db.String(200), nullable=False)
+    uploader_name = db.Column(db.String(100), nullable=False)
+    date_uploaded = db.Column(db.DateTime, default=datetime.utcnow)
+
+# ─────────────────────────────────────────
 # DISTANCE HELPER
 # ─────────────────────────────────────────
 

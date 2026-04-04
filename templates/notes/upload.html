@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Share Your Knowledge | Dronacharya Hub{% endblock %}
+
+{% block head %}
+<style>
+  .upload-glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#070D26] py-24 px-4 flex items-center justify-center">
+  <div class="max-w-2xl w-full">
+    
+    <div class="mb-10 text-center">
+       <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent" style="font-family:'Cinzel', serif;">
+          Share Your Notes
+       </h1>
+       <p class="text-gray-400 italic">"Knowledge is the only treasure that grows when shared."</p>
+    </div>
+
+    <div class="upload-glass rounded-3xl p-8 md:p-12">
+      <form action="{{ url_for('notes.upload') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        
+        <div class="space-y-2">
+          <label class="text-sm font-semibold text-gray-300 ml-1">Title</label>
+          <input type="text" name="title" required placeholder="e.g. Physics Chapter 3: Thermodynamics" 
+                 class="w-full bg-[#111827] border border-white/5 rounded-2xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-gray-300 ml-1">Subject</label>
+            <input type="text" name="subject" required placeholder="e.g. Physics, History, Math" 
+                   class="w-full bg-[#111827] border border-white/5 rounded-2xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition">
+          </div>
+          {% if not current_user.is_authenticated %}
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-gray-300 ml-1">Your Name</label>
+            <input type="text" name="uploader_name" placeholder="Leave empty for Anonymous" 
+                   class="w-full bg-[#111827] border border-white/5 rounded-2xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition">
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-semibold text-gray-300 ml-1">Short Description (optional)</label>
+          <textarea name="description" rows="3" placeholder="Briefly explain what's inside these notes..." 
+                    class="w-full bg-[#111827] border border-white/5 rounded-2xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition resize-none"></textarea>
+        </div>
+
+        <div class="pt-4">
+          <label class="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-3xl p-10 cursor-pointer hover:bg-white/5 transition border-indigo-500/30 group">
+             <div class="text-5xl mb-4 group-hover:scale-110 transition duration-300">📤</div>
+             <div class="font-bold text-lg mb-1" id="file-label">Choose File (PDF or Image)</div>
+             <div class="text-xs text-gray-500">Max size: 10MB</div>
+             <input type="file" name="file" required class="hidden" id="file-input" onchange="updateLabel()">
+          </label>
+        </div>
+
+        <button type="submit" class="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-700 text-white font-bold text-lg hover:from-indigo-500 hover:to-purple-600 transition shadow-xl shadow-indigo-900/40 transform hover:-translate-y-1">
+           Submit Notes
+        </button>
+
+        <a href="{{ url_for('notes.index') }}" class="block text-center text-sm text-gray-500 hover:text-indigo-400 transition font-medium underline">
+           Cancel and Return
+        </a>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function updateLabel() {
+     const input = document.getElementById('file-input');
+     const label = document.getElementById('file-label');
+     if (input.files.length > 0) {
+        label.innerText = "Selected: " + input.files[0].name;
+        label.classList.add('text-indigo-400');
+     }
+  }
+</script>
+{% endblock %}
