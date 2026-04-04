@@ -6,6 +6,7 @@ Flask-Login
 Flask-Cors
 Werkzeug
 google-generativeai
+google-genai
 gtts
 pypandoc
 yt-dlp

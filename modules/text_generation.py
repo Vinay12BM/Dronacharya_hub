@@ -1,10 +1,10 @@
 import os, json, random
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
-genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-model = genai.GenerativeModel('gemini-1.5-flash')
+client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
+model_id = 'gemini-1.5-flash'
 
 def serialize_history(history):
     result = []
@@ -22,7 +22,7 @@ def generate_gemini_quiz(topic):
         f'[{{"question":"...","options":{{"A":"...","B":"...","C":"...","D":"..."}},"answer":"A"}}]'
     )
     try:
-        response = model.generate_content(system_instruction)
+        response = client.models.generate_content(model=model_id, contents=system_instruction)
         text = response.text.strip()
         if '```json' in text: text = text.split('```json')[1].split('```')[0].strip()
         return json.loads(text)
@@ -42,7 +42,7 @@ def generate_gemini_chat(message, history):
         "Be patient, clear, encouraging. Use examples. Format responses in markdown. "
         "Never refuse a learning question."
     )
-    chat = model.start_chat(history=history)
+    chat = client.chats.create(model=model_id, config={'system_instruction': system_instruction}, history=history)
     try:
         response = chat.send_message(message)
         return response.text, serialize_history(chat.history)
@@ -51,7 +51,7 @@ def generate_gemini_chat(message, history):
         return "I am currently unable to answer that. Please try again later.", history
 
 def generate_tumtum_chat(message, history):
-    chat = model.start_chat(history=history)
+    chat = client.chats.create(model=model_id, history=history)
     try:
         response = chat.send_message(message)
         return response.text, serialize_history(chat.history)
@@ -70,7 +70,7 @@ def generate_gemini_paper(topic, language):
         f"Respond ONLY with markdown content. No preamble."
     )
     try:
-        response = model.generate_content(system_instruction)
+        response = client.models.generate_content(model=model_id, contents=system_instruction)
         if response.candidates and len(response.candidates) > 0:
             if response.candidates[0].finish_reason == 3:
                 return "ERROR: Restricted by safety filters."
@@ -125,7 +125,7 @@ def generate_gemini_citation(source, style):
         f"\n3. Respond ONLY with the formatted citation string. No preamble, no conversational text."
     )
     try:
-        response = model.generate_content(system_instruction)
+        response = client.models.generate_content(model=model_id, contents=system_instruction)
         return response.text.strip()
     except Exception as e:
         err_msg = str(e)
@@ -137,7 +137,7 @@ def generate_gemini_citation(source, style):
 
 def generate_gemini_notes(topic):
     try:
-        response = model.generate_content(f"Generate study notes for: {topic}")
+        response = client.models.generate_content(model=model_id, contents=f"Generate study notes for: {topic}")
         if response.text:
             return response.text
         return f"# Study Notes: {topic}\n(Empty response from AI)"
@@ -152,7 +152,7 @@ def generate_chess_move(fen):
         f"Return ONLY the UCI move string. No explanation, no text."
     )
     try:
-        response = model.generate_content(system_instruction)
+        response = client.models.generate_content(model=model_id, contents=system_instruction)
         return response.text.strip().lower()
     except Exception as e:
         print(f"Gemini Chess Move Error: {e}")
@@ -165,7 +165,7 @@ def generate_crossmath_puzzle(difficulty="Medium"):
         f"Ensure the math is correct."
     )
     try:
-        response = model.generate_content(system_instruction)
+        response = client.models.generate_content(model=model_id, contents=system_instruction)
         text = response.text.strip()
         if '```json' in text: text = text.split('```json')[1].split('```')[0].strip()
         return json.loads(text)
