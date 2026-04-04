@@ -39,7 +39,16 @@
                 <div class="text-2xl font-black text-green-700">
                     {% if book.listing_type == 'sell' %}₹{{ book.price|int }}{% else %}{{ book.listing_type|capitalize }}{% endif %}
                 </div>
-                <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-black group-hover:bg-green-600 group-hover:text-white transition shadow-sm">→</div>
+                <div class="flex items-center gap-2">
+                    {% if current_user.is_authenticated and book.user_id == current_user.id %}
+                    <form action="{{ url_for('books.delete_book', id=book.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this listing?');" onclick="event.stopPropagation();">
+                        <button type="submit" class="w-10 h-10 rounded-full bg-red-50 text-red-400 hover:bg-red-600 border border-red-100 hover:text-white transition shadow-sm flex items-center justify-center">
+                            🗑️
+                        </button>
+                    </form>
+                    {% endif %}
+                    <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-black group-hover:bg-green-600 group-hover:text-white transition shadow-sm">→</div>
+                </div>
             </div>
         </div>
       </div>

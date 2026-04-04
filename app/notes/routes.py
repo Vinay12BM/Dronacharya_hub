@@ -112,17 +112,14 @@ def upload():
             
             db.session.add(new_note)
             
-            # Award Coupon
-            coupon_to_award = None
+            # Award Coupon (Guest Friendly for Hackathon)
+            coupon_to_award = random.choice(COUPON_LINKS)
+            
             if current_user.is_authenticated:
-                # Find coupons user hasn't received yet
+                # Track for authenticated users
                 user_coupons = {c.coupon_url for c in current_user.coupons}
                 available_coupons = [url for url in COUPON_LINKS if url not in user_coupons]
-                
-                if not available_coupons:
-                    # If all earned, pick a random one to restart cycle or just random
-                    coupon_to_award = random.choice(COUPON_LINKS)
-                else:
+                if available_coupons:
                     coupon_to_award = random.choice(available_coupons)
                 
                 new_coupon = UserCoupon(user_id=current_user.id, coupon_url=coupon_to_award)
