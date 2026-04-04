@@ -181,7 +181,7 @@
         }
 
         // Global Handshake for Android Native SDK
-        window.verifyNativePayment = async function(paymentId, orderId) {
+        window.verifyNativePayment = async function(paymentId, orderId, signature) {
             console.log("Research: Native Handshake Triggered:", paymentId);
             try {
                 const baseUrl = window.location.origin;
@@ -190,7 +190,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         razorpay_payment_id: paymentId,
-                        razorpay_order_id: orderId
+                        razorpay_order_id: orderId,
+                        razorpay_signature: signature
                     })
                 });
                 const vData = await vRes.json();
