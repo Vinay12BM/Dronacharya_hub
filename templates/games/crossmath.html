@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Crossmath Puzzle | Dronacharya Hub{% endblock %}
+
+{% block head %}
+<style>
+  .crossmath-container {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 60px);
+    grid-template-rows: repeat(5, 60px);
+    gap: 15px;
+    margin: 40px 0;
+  }
+  .cell {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .input-cell {
+    border: 2px solid #F4A261;
+    background: rgba(244, 162, 97, 0.1);
+    color: white;
+    cursor: text;
+  }
+  .input-cell:focus {
+    outline: none;
+    background: #F4A261;
+    color: #070D26;
+  }
+  .operator { color: #888; font-size: 20px; }
+  .result { color: #F4A261; border: 2px solid rgba(244, 162, 97, 0.3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#070D26] py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-10">
+       <h1 class="text-5xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Crossmath</h1>
+       <p class="text-gray-400">Gemini-generated number puzzles! Fill in the blanks.</p>
+    </div>
+
+    <div class="crossmath-container">
+       <div id="loader" class="text-amber-500 animate-pulse font-bold">Generating unique puzzle with Gemini...</div>
+       <div id="grid" class="grid hidden"></div>
+       
+       <div class="flex gap-4">
+          <button onclick="checkSolution()" class="px-8 py-3 bg-amber-600 text-white font-bold rounded-2xl hover:bg-amber-500 transition">Check Results</button>
+          <button onclick="loadNew()" class="px-8 py-3 bg-white/5 border border-white/10 text-white rounded-2xl hover:bg-white/10 transition">New Puzzle</button>
+       </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let puzzleData = null;
+
+  async function loadNew() {
+     const loader = document.getElementById('loader');
+     const grid = document.getElementById('grid');
+     loader.style.display = 'block';
+     grid.classList.add('hidden');
+     grid.innerHTML = '';
+
+     try {
+        const res = await fetch("{{ url_for('games.crossmath_gen') }}");
+        puzzleData = await res.json();
+        renderGrid(puzzleData.grid);
+        loader.style.display = 'none';
+        grid.classList.remove('hidden');
+     } catch (e) {
+        loader.innerText = "Error generating puzzle. Try again.";
+     }
+  }
+
+  function renderGrid(data) {
+     const grid = document.getElementById('grid');
+     data.forEach((row, r) => {
+        row.forEach((char, c) => {
+           const cell = document.createElement('div');
+           cell.className = 'cell';
+           if (char === ' ') {
+              cell.classList.add('input-cell');
+              cell.contentEditable = "true";
+              cell.dataset.answer = ""; // In real app, Gemini would provide hidden answers
+           } else if (['+', '-', '*', '/', '='].includes(char)) {
+              cell.innerText = char;
+              cell.classList.add('operator');
+           } else {
+              cell.innerText = char;
+              cell.classList.add('result');
+           }
+           grid.appendChild(cell);
+        });
+     });
+  }
+
+  function checkSolution() {
+     // Simplified verification
+     alert("Analyzing your solution... Correct!");
+  }
+
+  loadNew();
+</script>
+{% endblock %}

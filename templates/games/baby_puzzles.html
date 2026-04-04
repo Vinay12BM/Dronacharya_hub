@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Baby Puzzles | Dronacharya Hub{% endblock %}
+
+{% block head %}
+<style>
+  .puzzle-area {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
+    padding: 50px;
+    display: flex;
+    gap: 100px;
+    justify-content: center;
+    align-items: center;
+    min-height: 500px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+  }
+  .draggable {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    cursor: grab;
+    transition: transform 0.2s;
+    user-select: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 3px solid #EC4899;
+    border-radius: 20px;
+  }
+  .draggable:active { cursor: grabbing; scale: 0.9; }
+  .target {
+    width: 110px;
+    height: 110px;
+    border: 4px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    transition: all 0.3s;
+    background: rgba(0, 0, 0, 0.3);
+  }
+  .drop-hover { background: rgba(236, 72, 153, 0.2); border-color: #EC4899; scale: 1.1; }
+  .matched { border-style: solid; border-color: #10B981; background: rgba(16, 185, 129, 0.2) !important; scale: 1.0; }
+  .win-overlay {
+     position: fixed; top:0; left:0; width:100%; height:100%; 
+     background: rgba(7, 13, 38, 0.9); display: none; 
+     flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#070D26] py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+    
+    <div class="text-center mb-10">
+       <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-pink-400 to-rose-500 bg-clip-text text-transparent" style="font-family:'Sora', sans-serif;">Shapes & Colors</h1>
+       <div class="flex items-center justify-center gap-4">
+          <p class="text-gray-400">Drag the matching emojis to the right box!</p>
+       </div>
+    </div>
+
+    <div class="puzzle-area">
+       <!-- Draggable Pieces -->
+       <div class="flex flex-col gap-8" id="pieces">
+          <!-- Dynamically generated -->
+       </div>
+
+       <!-- Target Zones -->
+       <div class="flex flex-col gap-8" id="targets">
+          <!-- Dynamically generated -->
+       </div>
+    </div>
+
+    <div class="mt-12 text-center">
+       <button class="px-8 py-3 bg-pink-600 text-white font-bold rounded-2xl hover:bg-pink-500 transition" onclick="location.reload()">New Puzzle</button>
+    </div>
+  </div>
+</div>
+
+<div class="win-overlay" id="win">
+   <div class="text-9xl mb-10 text-center animate-bounce">🌈</div>
+   <h2 class="text-6xl font-bold text-white mb-6 text-center">Super Job!</h2>
+   <p class="text-gray-400 text-xl mb-10 text-center">You found all the matching shapes!</p>
+   <button class="px-12 py-5 bg-pink-600 text-white font-bold text-2xl rounded-3xl hover:bg-pink-500 transition shadow-2xl shadow-pink-900/40" onclick="location.reload()">Play Again</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let matches = 0;
+  const puzzlePool = ['🍎', '🚗', '⭐', '🐱', '🐘', '🍦', '🎈', '🎨', '🚀', '🌈', '🦁', '🦖', '🐝', '🐬', '🍔', '🍕', '🚲', '🛸', '👻', '👾', '🍓', '🥑', '🍭', '🧸'];
+
+  function initGame() {
+     const piecesContainer = document.getElementById('pieces');
+     const targetsContainer = document.getElementById('targets');
+     piecesContainer.innerHTML = '';
+     targetsContainer.innerHTML = '';
+     matches = 0;
+
+     // Select 4 unique random emojis
+     const selected = [];
+     const poolCopy = [...puzzlePool];
+     for (let i = 0; i < 4; i++) {
+        const index = Math.floor(Math.random() * poolCopy.length);
+        selected.push(poolCopy.splice(index, 1)[0]);
+     }
+
+     // Create draggables
+     const draggables = selected.map((emoji, index) => {
+        const div = document.createElement('div');
+        div.className = 'draggable transition-all hover:scale-105';
+        div.draggable = true;
+        div.id = 'drag-' + index;
+        div.dataset.match = emoji;
+        div.innerText = emoji;
+        
+        div.addEventListener('dragstart', (e) => {
+           e.dataTransfer.setData('text', div.id);
+           div.style.opacity = '0.5';
+        });
+        
+        div.addEventListener('dragend', () => {
+           div.style.opacity = '1';
+        });
+
+        return div;
+     });
+
+     // Create targets
+     const targets = selected.map((emoji) => {
+        const div = document.createElement('div');
+        div.className = 'target';
+        div.dataset.match = emoji;
+        
+        div.addEventListener('dragover', (e) => {
+           e.preventDefault();
+           div.classList.add('drop-hover');
+        });
+
+        div.addEventListener('dragleave', () => {
+           div.classList.remove('drop-hover');
+        });
+
+        div.addEventListener('drop', (e) => {
+           e.preventDefault();
+           div.classList.remove('drop-hover');
+           const draggedID = e.dataTransfer.getData('text');
+           const draggedEl = document.getElementById(draggedID);
+           
+           if (draggedEl && draggedEl.dataset.match === div.dataset.match) {
+              div.innerHTML = draggedEl.innerHTML;
+              div.classList.add('matched', 'animate-pulse');
+              draggedEl.style.visibility = 'hidden';
+              matches++;
+              if (matches === 4) {
+                 setTimeout(() => { document.getElementById('win').style.display = 'flex'; }, 500);
+              }
+           }
+        });
+        return div;
+     });
+
+     // Shuffle and append
+     draggables.sort(() => Math.random() - 0.5).forEach(d => piecesContainer.appendChild(d));
+     targets.sort(() => Math.random() - 0.5).forEach(t => targetsContainer.appendChild(t));
+  }
+
+  document.addEventListener('DOMContentLoaded', initGame);
+</script>
+{% endblock %}

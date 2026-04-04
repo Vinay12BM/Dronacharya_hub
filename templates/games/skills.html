@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Skills: Logic Brain Games | Dronacharya Hub{% endblock %}
+
+{% block head %}
+<style>
+  .skills-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  .timer-bar {
+    position: absolute; top:0; left:0; height: 5px; width: 100%;
+    background: #10B981; transition: width 0.1s linear;
+  }
+  .display-box {
+    font-size: 80px; margin: 40px 0; min-height: 120px;
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
+  }
+  .controls { display: flex; gap: 30px; }
+  .control-btn {
+    width: 100px; height: 100px; background: rgba(255, 255, 255, 0.1);
+    border: 3px solid #60A5FA; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; cursor: pointer; transition: scale 0.2s;
+  }
+  .control-btn:active { scale: 0.9; }
+  .score-badge { position: absolute; top: 30px; right: 40px; font-weight: 800; color: #10B981; font-size: 24px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#070D26] py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-10">
+       <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">Logic Skills</h1>
+       <p class="text-gray-400">Improve your reaction speed and logical thinking!</p>
+    </div>
+
+    <div class="skills-card">
+       <div class="timer-bar" id="timer"></div>
+       <div class="score-badge">Score: <span id="score">0</span></div>
+       
+       <div class="text-gray-500 font-bold uppercase tracking-widest text-xs mb-4">Click the matching icon!</div>
+       <div class="display-box animate-bounce" id="target">🚀</div>
+
+       <div class="controls" id="controls">
+          <!-- Dynamically generated buttons -->
+          <div class="control-btn hover:bg-blue-600/20" onclick="check('🚀')">🚀</div>
+          <div class="control-btn hover:bg-pink-600/20" onclick="check('💎')">💎</div>
+          <div class="control-btn hover:bg-amber-600/20" onclick="check('🔥')">🔥</div>
+       </div>
+
+       <div class="mt-20">
+          <button id="startBtn" onclick="startGame()" class="px-12 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-500 transition shadow-2xl shadow-blue-900/40">Start Brain Training</button>
+       </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let score = 0;
+  let time = 100;
+  let interval = null;
+  let currentIcon = '';
+  // Expanded vibrant icon pool
+  const iconPool = ['🚀', '💎', '🔥', '⚡', '🌈', '⭐', '🎈', '🍀', '🍎', '🍔', '🍦', '🚲', '🛸', '👻', '👾', '🤖', '🦖', '🦁', '🏀', '🎸', '🎨', '🌋', '🌊', '🌙'];
+
+  function startGame() {
+     score = 0;
+     time = 100;
+     document.getElementById('score').innerText = '0';
+     document.getElementById('startBtn').style.display = 'none';
+     nextLevel();
+     if(interval) clearInterval(interval);
+     interval = setInterval(tick, 100);
+  }
+
+  function tick() {
+     time -= 1.5; // Slightly slower decay for better experience
+     document.getElementById('timer').style.width = time + '%';
+     if (time <= 0) {
+        clearInterval(interval);
+        alert("⏱️ Time's up! Your logical speed score: " + score);
+        document.getElementById('startBtn').style.display = 'block';
+        // Reset to initial state
+        document.getElementById('target').innerText = '🚀';
+     }
+  }
+
+  function nextLevel() {
+     // Ensure the new target icon is different from the current one
+     let nextTarget;
+     do {
+        nextTarget = iconPool[Math.floor(Math.random() * iconPool.length)];
+     } while (nextTarget === currentIcon);
+     
+     currentIcon = nextTarget;
+     const targetEl = document.getElementById('target');
+     targetEl.innerText = currentIcon;
+     
+     // Animation effect
+     targetEl.classList.remove('animate-bounce');
+     void targetEl.offsetWidth; // Trigger reflow
+     targetEl.classList.add('animate-bounce');
+
+     // Generate 3 unique options including the correct one
+     let options = [currentIcon];
+     while (options.length < 3) {
+        let rand = iconPool[Math.floor(Math.random() * iconPool.length)];
+        if (!options.includes(rand)) options.push(rand);
+     }
+     
+     // Shuffle the options
+     options.sort(() => Math.random() - 0.5);
+     
+     // Update buttons dynamically
+     const controls = document.getElementById('controls');
+     controls.innerHTML = '';
+     
+     options.forEach(icon => {
+        const btn = document.createElement('div');
+        btn.className = 'control-btn hover:bg-white/10 transition-all duration-200 transform hover:scale-110 active:scale-95';
+        btn.innerText = icon;
+        btn.style.border = `3px solid ${getRandomColor()}`;
+        btn.onclick = () => check(icon);
+        controls.appendChild(btn);
+     });
+
+     time = Math.min(100, time + 12); // Bonus time on success
+  }
+
+  function getRandomColor() {
+     const colors = ['#60A5FA', '#F472B6', '#FBBF24', '#34D399', '#A78BFA', '#F87171'];
+     return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  function check(icon) {
+     if (icon === currentIcon) {
+        score += 10;
+        document.getElementById('score').innerText = score;
+        nextLevel();
+     } else {
+        time -= 15; // Penalty for wrong click
+        // Visual feedback for error
+        document.body.classList.add('bg-red-900/10');
+        setTimeout(() => document.body.classList.remove('bg-red-900/10'), 100);
+     }
+  }
+</script>
+{% endblock %}

@@ -117,3 +117,31 @@ def generate_gemini_notes(topic):
     except Exception as e:
         print(f"Gemini Notes Error: {e}")
         return f"# Study Notes: {topic}\n(Error)"
+
+def generate_chess_move(fen):
+    system_instruction = (
+        f"You are a professional Grandmaster Chess Engine. The current board state in FEN is: '{fen}'. "
+        f"Choose the absolute best UCI move (e.g., 'e2e4') for the player whose turn it is. "
+        f"Return ONLY the UCI move string. No explanation, no text."
+    )
+    try:
+        response = model.generate_content(system_instruction)
+        return response.text.strip().lower()
+    except Exception as e:
+        print(f"Gemini Chess Move Error: {e}")
+        return None
+
+def generate_crossmath_puzzle(difficulty="Medium"):
+    system_instruction = (
+        f"Generate a {difficulty} Crossmath puzzle (math grid). Return ONLY valid JSON. "
+        f"Format: {{\"grid\": [[\"5\",\"+\",\"3\",\"=\",\"8\"],[\"*\",\" \",\" \",\" \",\"+\"],[\"2\",\"+\",\"4\",\"=\",\"6\"],[\"=\",\" \",\" \",\" \",\"=\"],[\"10\",\" \",\" \",\" \",\"14\"]], \"clues\": [\"Row 1: 5+3=8\", \"Col 1: 5*2=10\"]}} "
+        f"Ensure the math is correct."
+    )
+    try:
+        response = model.generate_content(system_instruction)
+        text = response.text.strip()
+        if '```json' in text: text = text.split('```json')[1].split('```')[0].strip()
+        return json.loads(text)
+    except Exception as e:
+        print(f"Gemini Crossmath Error: {e}")
+        return None

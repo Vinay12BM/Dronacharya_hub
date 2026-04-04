@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Word Search | Dronacharya Hub{% endblock %}
+
+{% block head %}
+<style>
+  .word-search-container {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
+    padding: 50px;
+    display: flex;
+    gap: 50px;
+    justify-content: center;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 35px);
+    grid-template-rows: repeat(12, 35px);
+    background: #070D26;
+    border: 3px solid #F4A261;
+    border-radius: 10px;
+    padding: 10px;
+  }
+  .letter {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+  }
+  .letter:hover { background: rgba(244, 162, 97, 0.2); }
+  .selected { background: #F4A261 !important; color: #070D26 !important; border-radius: 5px; }
+  .found { background: #10B981 !important; color: white !important; border-radius: 5px; }
+  .word-list {
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .word-item {
+    font-weight: 800;
+    color: #F4A261;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .strike { text-decoration: line-through; opacity: 0.3; color: #10B981 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#070D26] py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+    
+    <div class="text-center mb-10">
+       <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent" style="font-family:'Cinzel', serif;">Word Explorer</h1>
+       <p class="text-gray-400">Find all hidden words related to space!</p>
+    </div>
+
+    <div class="word-search-container flex-col md:flex-row">
+       <div id="grid" class="grid"></div>
+       <div class="word-list" id="list"></div>
+    </div>
+
+    <div class="mt-12 text-center">
+       <button class="px-12 py-4 bg-amber-600 text-white font-bold rounded-2xl hover:bg-amber-500 transition shadow-xl shadow-orange-950/20" onclick="location.reload()">Next Board</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const words = ["GALAXY", "ORBIT", "PLANET", "STAR", "COMET", "MARS", "SUN"];
+  const gridSize = 12;
+  const gridModel = [];
+  const listEl = document.getElementById('list');
+  const gridEl = document.getElementById('grid');
+
+  let selectedCells = [];
+  let foundCount = 0;
+
+  function init() {
+     // Create empty grid
+     for (let r = 0; r < gridSize; r++) {
+        gridModel[r] = [];
+        for (let c = 0; c < gridSize; c++) {
+           gridModel[r][c] = '';
+        }
+     }
+
+     // Place words
+     words.forEach(word => {
+        let placed = false;
+        while (!placed) {
+           const dir = Math.random() > 0.5 ? [0, 1] : [1, 0];
+           const r = Math.floor(Math.random() * (gridSize - word.length * dir[0]));
+           const c = Math.floor(Math.random() * (gridSize - word.length * dir[1]));
+           
+           let fits = true;
+           for (let i = 0; i < word.length; i++) {
+              if (gridModel[r + i*dir[0]][c + i*dir[1]] !== '') fits = false;
+           }
+
+           if (fits) {
+              for (let i = 0; i < word.length; i++) {
+                 gridModel[r + i*dir[0]][c + i*dir[1]] = word[i];
+              }
+              placed = true;
+           }
+        }
+     });
+
+     // Fill random letters
+     for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+           if (gridModel[r][c] === '') {
+              gridModel[r][c] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
+           }
+           
+           const el = document.createElement('div');
+           el.className = 'letter';
+           el.innerText = gridModel[r][c];
+           el.dataset.r = r;
+           el.dataset.c = c;
+           el.addEventListener('mousedown', startSelect);
+           el.addEventListener('mouseenter', continueSelect);
+           gridEl.appendChild(el);
+        }
+     }
+
+     // Fill word list
+     words.forEach(w => {
+        const item = document.createElement('div');
+        item.className = 'word-item';
+        item.innerText = w;
+        item.id = 'word-' + w;
+        listEl.appendChild(item);
+     });
+  }
+
+  function startSelect(e) { selectedCells = [e.target]; e.target.classList.add('selected'); }
+  function continueSelect(e) {
+     if (e.buttons === 1 && !selectedCells.includes(e.target)) {
+        selectedCells.push(e.target);
+        e.target.classList.add('selected');
+     }
+  }
+
+  window.addEventListener('mouseup', () => {
+     const currentWord = selectedCells.map(c => c.innerText).join('');
+     const reversedWord = currentWord.split('').reverse().join('');
+     
+     if (words.includes(currentWord) || words.includes(reversedWord)) {
+        const matchingWord = words.includes(currentWord) ? currentWord : reversedWord;
+        selectedCells.forEach(c => {
+           c.classList.remove('selected');
+           c.classList.add('found');
+        });
+        const item = document.getElementById('word-' + matchingWord);
+        if (!item.classList.contains('strike')) {
+           item.classList.add('strike');
+           foundCount++;
+           if (foundCount === words.length) alert("🏆 Cosmic Victory! You found all words!");
+        }
+     } else {
+        selectedCells.forEach(c => c.classList.remove('selected'));
+     }
+     selectedCells = [];
+  });
+
+  init();
+</script>
+{% endblock %}

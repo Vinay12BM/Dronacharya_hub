@@ -34,18 +34,20 @@ def create_app():
 
         from . import models
 
-        # Register all 5 blueprints
+        # Register all 6 blueprints
         from .tutor.routes   import tutor_bp
         from .research.routes import research_bp
         from .books.routes   import books_bp
         from .scholarships.routes import scholarship_bp
         from .notes.routes   import notes_bp
+        from .games.routes   import games_bp
 
         app.register_blueprint(tutor_bp,    url_prefix='/tutor')
         app.register_blueprint(research_bp, url_prefix='/research')
         app.register_blueprint(books_bp,    url_prefix='/books')
         app.register_blueprint(scholarship_bp, url_prefix='/scholarships')
         app.register_blueprint(notes_bp,    url_prefix='/notes')
+        app.register_blueprint(games_bp,    url_prefix='/games')
 
         # Homepage route
         from flask import render_template

@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Jalebi Adda: Ludo | Dronacharya Hub{% endblock %}
+
+{% block head %}
+<style>
+  .ludo-board {
+    width: 600px;
+    height: 600px;
+    background: #0B1437;
+    border: 10px solid #F4A261;
+    border-radius: 20px;
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 50px rgba(244, 162, 97, 0.2);
+    margin: 0 auto;
+    position: relative;
+  }
+  .base { grid-column: span 6; grid-row: span 6; }
+  .red-base { background: #EF4444; }
+  .green-base { background: #10B981; grid-column-start: 10; }
+  .yellow-base { background: #FBBF24; grid-column-start: 10; grid-row-start: 10; }
+  .blue-base { background: #3B82F6; grid-row-start: 10; }
+  .path { border: 1px solid rgba(255,255,255,0.05); }
+  .home-center {
+    grid-column: 7/10; grid-row: 7/10;
+    background: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>');
+    background-size: cover;
+  }
+  .piece {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 3px solid white; box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+    cursor: pointer; transition: transform 0.2s;
+  }
+  .dice-container {
+    padding: 30px; background: rgba(255,255,255,0.05);
+    border-radius: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+  .dice {
+    width: 80px; height: 80px; background: white; border-radius: 15px;
+    display: flex; align-items: center; justify-content: center; font-size: 40px; color: #070D26;
+    font-weight: 800; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+  .dice:hover { transform: scale(1.05); }
+  .dice:active { transform: scale(0.95); }
+  .rolling { animation: roll 0.5s infinite linear; }
+  @keyframes roll {
+    0% { transform: rotate(0); }
+    100% { transform: rotate(360deg); }
+  }
+  .turn-indicator {
+     padding: 8px 20px; border-radius: 20px; font-weight: 800; text-transform: uppercase; font-size: 14px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#070D26] py-20 px-4">
+  <div class="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 items-center justify-center">
+    
+    <!-- Game Board -->
+    <div class="flex flex-col items-center">
+       <div class="mb-6 flex gap-4">
+          <span class="turn-indicator bg-red-500 text-white" id="indicator">It's Red's Turn</span>
+       </div>
+       <div class="ludo-board" id="board">
+          <div class="base red-base"></div>
+          <div class="base green-base"></div>
+          <div class="base yellow-base"></div>
+          <div class="base blue-base"></div>
+          <div class="home-center"></div>
+          <!-- Simplified path cells would go here, for demo we just show the board layout -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+             <div class="text-white/20 text-4xl font-bold uppercase tracking-widest opacity-30 select-none">Ludo Arena</div>
+          </div>
+       </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="dice-container w-full lg:w-80 border border-white/10 backdrop-blur-xl">
+       <h4 class="text-amber-500 font-bold uppercase tracking-widest text-sm mb-4">Roll the Dice</h4>
+       <div class="dice" id="dice" onclick="rollDice()">1</div>
+       <p class="text-gray-400 text-center text-sm">Click the dice to roll. Strategy is key to winning the Jalebi Adda!</p>
+       
+       <div class="mt-10 w-full space-y-4">
+          <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-4">
+             <div class="w-4 h-4 rounded-full bg-red-500"></div>
+             <span class="text-xs text-gray-500 font-bold">Player 1 (You)</span>
+          </div>
+          <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-4">
+             <div class="w-4 h-4 rounded-full bg-green-500"></div>
+             <span class="text-xs text-gray-500 font-bold">Gemini Bot</span>
+          </div>
+       </div>
+
+       <button class="mt-10 w-full py-4 bg-amber-600 text-[#070D26] font-bold rounded-2xl hover:bg-amber-500 transition" onclick="resetGame()">Reset Arena</button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let diceValue = 1;
+  let isRolling = false;
+  const diceEl = document.getElementById('dice');
+  const indicator = document.getElementById('indicator');
+
+  function rollDice() {
+     if (isRolling) return;
+     isRolling = true;
+     diceEl.classList.add('rolling');
+     
+     setTimeout(() => {
+        diceValue = Math.floor(Math.random() * 6) + 1;
+        diceEl.innerText = diceValue;
+        diceEl.classList.remove('rolling');
+        isRolling = false;
+        
+        // Simple logic: auto switch turns for demo
+        setTimeout(() => {
+           if (indicator.innerText.includes('Red')) {
+              indicator.innerText = "It's Green's Turn (Bot)";
+              indicator.classList.remove('bg-red-500');
+              indicator.classList.add('bg-green-500');
+              // Auto roll for bot
+              setTimeout(rollDice, 1500);
+           } else {
+              indicator.innerText = "It's Red's Turn (You)";
+              indicator.classList.remove('bg-green-500');
+              indicator.classList.add('bg-red-500');
+           }
+        }, 800);
+     }, 600);
+  }
+
+  function resetGame() {
+     diceValue = 1;
+     diceEl.innerText = '1';
+     indicator.innerText = "It's Red's Turn";
+     indicator.className = "turn-indicator bg-red-500 text-white";
+  }
+</script>
+{% endblock %}
