@@ -8,7 +8,7 @@
       <p class="text-gray-500">Pick up where you left off or start a new challenge.</p>
     </div>
     <div class="hidden md:block">
-      <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" class="w-16 h-16 rounded-full border-4 border-blue-500/20 object-cover shadow-lg">
+      <img src="{% if current_user.profile_pic.startswith('http') %}{{ current_user.profile_pic }}{% else %}{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}{% endif %}" class="w-16 h-16 rounded-full border-4 border-blue-500/20 object-cover shadow-lg">
     </div>
   </div>
 
@@ -48,7 +48,7 @@
                   <span>{{ item.progress }}%</span>
                 </div>
                 <div class="progress-bar">
-                  <div class="progress-fill" style="width: {{ item.progress }}%"></div>
+                  <div class="progress-fill" style="width: {{ item.progress }}%;"></div>
                 </div>
               </div>
               <a href="{{ url_for('tutor.course_detail', id=item.course.id) }}" class="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">Continue Learning →</a>

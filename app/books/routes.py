@@ -43,8 +43,13 @@ def list_book():
         if 'cover_image' in request.files:
             file = request.files['cover_image']
             if file and file.filename != '':
-                filename = secure_filename(f"book_{uuid.uuid4().hex}_{file.filename}")
-                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+                from modules.cloudinary_helper import upload_file_to_cloudinary
+                c_url = upload_file_to_cloudinary(file, folder="books")
+                if c_url:
+                    filename = c_url
+                else:
+                    filename = secure_filename(f"book_{uuid.uuid4().hex}_{file.filename}")
+                    file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
         
         new_book = Book(
             title=title, price=price, seller_name=seller_name, seller_phone=seller_phone,

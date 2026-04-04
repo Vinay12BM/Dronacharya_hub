@@ -174,9 +174,16 @@ def profile():
         if 'profile_pic' in request.files:
             file = request.files['profile_pic']
             if file and file.filename != '':
-                filename = secure_filename(f"avatar_{current_user.id}_{file.filename}")
-                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-                current_user.profile_pic = filename
+                from modules.cloudinary_helper import upload_file_to_cloudinary
+                # Try Cloudinary first
+                c_url = upload_file_to_cloudinary(file, folder="avatars")
+                if c_url:
+                    current_user.profile_pic = c_url
+                else:
+                    # LOCAL FALLBACK
+                    filename = secure_filename(f"avatar_{current_user.id}_{file.filename}")
+                    file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+                    current_user.profile_pic = filename
         
         db.session.commit()
         flash('Profile updated!', 'success')

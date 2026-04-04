@@ -81,7 +81,7 @@
       {% if current_user and current_user.is_authenticated %}
         <a href="{{ url_for('tutor.dashboard') }}"
            class="hidden md:flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 px-3 py-2 rounded-lg text-sm transition">
-          <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}"
+          <img src="{% if current_user.profile_pic.startswith('http') %}{{ current_user.profile_pic }}{% else %}{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}{% endif %}"
                class="w-7 h-7 rounded-full object-cover">
           <span>{{ current_user.first_name }}</span>
         </a>

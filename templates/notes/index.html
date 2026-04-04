@@ -77,10 +77,10 @@
         </div>
         
         <div class="mt-6 flex gap-2">
-           <a href="{{ url_for('static', filename='notes/' + note.file_path) }}" target="_blank" class="flex-grow text-center py-3 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold transition border border-white/10">
+           <a href="{% if note.file_path.startswith('http') %}{{ note.file_path }}{% else %}{{ url_for('static', filename='notes/' + note.file_path) }}{% endif %}" target="_blank" class="flex-grow text-center py-3 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold transition border border-white/10">
              View File
            </a>
-           <a href="{{ url_for('static', filename='notes/' + note.file_path) }}" download class="w-12 flex items-center justify-center bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-xl transition">
+           <a href="{% if note.file_path.startswith('http') %}{{ note.file_path }}{% else %}{{ url_for('static', filename='notes/' + note.file_path) }}{% endif %}" download class="w-12 flex items-center justify-center bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-xl transition">
              ⬇️
            </a>
         </div>
