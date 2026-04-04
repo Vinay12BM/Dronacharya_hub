@@ -75,22 +75,49 @@
 
         async function startResearchPayment() {
             const btn = document.getElementById('pay-btn');
+            const originalText = btn.textContent;
             btn.disabled = true; 
-            btn.textContent = 'Waking up server...';
+            btn.textContent = '🔄 Waking up server...';
+            console.log("Research: Initiating payment sequence...");
 
             try {
-                // Step 1: Wake server (optional but good for Render free tier)
-                await fetch("/");
+                // Determine base URL for absolute paths (better for WebViews)
+                const baseUrl = window.location.origin;
+
+                // Step 1: Wake server with a timeout (don't wait forever)
+                console.log("Research: Waking server via root ping...");
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout for wake
+                
+                await fetch(baseUrl + "/", { signal: controller.signal })
+                    .then(() => console.log("Research: Wake ping successful."))
+                    .catch(e => console.warn("Wake ping failed or timed out, continuing anyway:", e))
+                    .finally(() => clearTimeout(timeoutId));
 
                 // Step 2: wait a bit for server to fully breathe
-                await new Promise(r => setTimeout(r, 4000));
+                console.log("Research: Waiting 2s for server response stabilization...");
+                await new Promise(r => setTimeout(r, 2000));
 
-                btn.textContent = 'Preparing...';
+                btn.textContent = '🧾 Preparing order...';
+                console.log("Research: Creating order via backend...");
 
-                const res = await fetch('/research/create-order', { method: 'POST' });
+                const res = await fetch(baseUrl + '/research/create-order', { 
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (!res.ok) {
+                    const errText = await res.text();
+                    console.error("Research: Order creation failed with status:", res.status, errText);
+                    throw new Error(`Order server error: ${res.status}`);
+                }
+
                 const data = await res.json();
+                console.log("Research: Order created successfully:", data.order_id);
 
-                if (!data.success) throw new Error(data.message);
+                if (!data.success) throw new Error(data.message || 'Order creation failed');
+
+                btn.textContent = '🚀 Opening Razorpay...';
 
                 const options = {
                     "key": RAZORPAY_KEY_ID,
@@ -100,27 +127,44 @@
                     "description": "Unlock Research Premium",
                     "order_id": data.order_id,
                     "handler": async function (response) {
-                        const vRes = await fetch('/research/verify-payment', {
+                        console.log("Research: Payment handler triggered...");
+                        btn.textContent = '✅ Verifying...';
+                        const vRes = await fetch(baseUrl + '/research/verify-payment', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(response)
                         });
                         const vData = await vRes.json();
                         if (vData.success) {
-                            showToast('Research access unlocked!', 'success');
+                            showToast('Welcome to Premium Research!', 'success');
                             setTimeout(() => window.location.reload(), 1500);
                         } else {
-                            showToast('Verification failed.', 'error');
+                            showToast('Verification failed: ' + (vData.message || 'Unknown'), 'error');
+                            btn.disabled = false; btn.textContent = originalText;
                         }
                     },
-                    "modal": { "ondismiss": function () { btn.disabled = false; btn.textContent = 'Activate Now →'; } },
+                    "modal": { 
+                        "ondismiss": function () { 
+                            console.log("Research: Modal dismissed by user.");
+                            btn.disabled = false; 
+                            btn.textContent = originalText; 
+                        } 
+                    },
                     "theme": { "color": "#7c3aed" }
                 };
+
+                if (typeof Razorpay === 'undefined') {
+                    throw new Error("Razorpay script not loaded. Check internet connection.");
+                }
+
                 const rzp1 = new Razorpay(options);
                 rzp1.open();
+                console.log("Research: Checkout modal opened.");
             } catch (e) {
+                console.error("Research Error:", e);
                 showToast(e.message, 'error');
-                btn.disabled = false; btn.textContent = 'Activate Now →';
+                btn.disabled = false; 
+                btn.textContent = originalText;
             }
         }
     </script>
