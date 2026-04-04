@@ -197,4 +197,25 @@ class AssignmentSubmission(db.Model):
     grade         = db.Column(db.String(20), nullable=True)
     feedback      = db.Column(db.Text, default='')
     submitted_at  = db.Column(db.DateTime, default=datetime.utcnow)
-    student       = db.relationship('User', foreign_keys=[student_id], backref=db.backref('assignment_submissions', lazy=True))
+    # ─────────────────────────────────────────
+# ROADMAP MODELS
+# ─────────────────────────────────────────
+
+class Roadmap(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id          = db.Column(db.Integer, primary_key=True)
+    user_id     = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    subject     = db.Column(db.String(200), nullable=False)
+    duration    = db.Column(db.Integer, default=1) # months
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+    tasks       = db.relationship('RoadmapTask', backref='roadmap_parent', lazy=True, cascade="all, delete-orphan")
+
+class RoadmapTask(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id          = db.Column(db.Integer, primary_key=True)
+    roadmap_id  = db.Column(db.Integer, db.ForeignKey('roadmap.id'), nullable=False)
+    day_number  = db.Column(db.Integer, nullable=False)
+    topic       = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.Text, default='') # Brief AI guide
+    is_completed= db.Column(db.Boolean, default=False)
+    completed_at= db.Column(db.DateTime, nullable=True)

@@ -98,6 +98,38 @@ def generate_gemini_quiz(topic):
         result = json.loads(text)
         save_to_cache(cache_key, result)
         return result
+    except: return []
+
+def generate_roadmap_tasks(subject, months):
+    import json
+    days = int(months) * 30
+    prompt = f"""
+    Create a complete DAY-BY-DAY learning roadmap for the subject: '{subject}'.
+    Duration: {months} month(s) ({days} days).
+    
+    For every single day (from Day 1 to Day {days}), provide:
+    1. A clear topic title.
+    2. A brief 1-sentence learning objective or description.
+    
+    Return the response as a JSON array of objects. 
+    Format: [{{"day": 1, "topic": "Introduction", "description": "Learn the basics..."}}, ...]
+    
+    Rules:
+    - Return ONLY the JSON array.
+    - No markdown formatting (no ```json).
+    - Ensure exactly {days} entries.
+    """
+    try:
+        raw_text = generate_with_fallback(prompt)
+        # Final cleanup for raw text
+        if '```json' in raw_text: raw_text = raw_text.split('```json')[1].split('```')[0].strip()
+        elif '```' in raw_text: raw_text = raw_text.split('```')[1].strip()
+        
+        tasks = json.loads(raw_text.strip())
+        return tasks
+    except Exception as e:
+        print(f"Roadmap AI Error: {e}")
+        return []
     except Exception as e:
         err_msg = str(e)
         print(f"Gemini Quiz Error: {err_msg}")

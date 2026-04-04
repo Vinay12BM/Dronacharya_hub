@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% block title %}The Classroom — Dual AI Teaching Session{% endblock %}
+
+{% block content %}
+<div class="h-screen bg-[#070B14] flex flex-col overflow-hidden relative">
+    
+    <!-- Immersive Background -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600 rounded-full blur-[150px] opacity-10"></div>
+        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-600 rounded-full blur-[130px] opacity-10"></div>
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+    </div>
+
+    <!-- MAIN SCENE AREA -->
+    <div class="flex-1 flex flex-col items-center justify-between relative z-10 p-4 md:p-10">
+        
+        <!-- Header Text -->
+        <div class="text-center z-20 mt-4">
+            <h1 class="text-white/30 text-[10px] font-black uppercase tracking-[15px] mb-2 animate-pulse">Dual Pedagogy System v3.0</h1>
+            <div id="status-bubble" class="px-6 py-2 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-amber-400 uppercase tracking-widest opacity-0 transition-opacity">
+                Initializing Lecture...
+            </div>
+        </div>
+
+        <!-- CHARACTERS CONTAINER -->
+        <div class="relative w-full h-[500px] flex items-end justify-center">
+            
+            <!-- TEACHER (Left-ish) -->
+            <div id="teacher-container" class="absolute left-[10%] bottom-0 w-[300px] md:w-[450px] transition-all duration-1000 transform hover:scale-105 z-20">
+                <div class="relative">
+                    <img id="teacher-img" src="{{ url_for('static', filename='animated_teacher_avatar.png') }}" 
+                         onerror="this.src='/static/animated_teacher.png';"
+                         class="w-full h-auto drop-shadow-[0_0_50px_rgba(239,68,68,0.2)]" alt="Teacher">
+                    
+                    <!-- Teacher Lip Sync Pulse Overlay -->
+                    <div class="mouth-overlay absolute top-[44%] left-[48%] w-10 h-5 bg-[#EF4444]/20 rounded-full blur-[8px] opacity-0 transition-opacity duration-300"></div>
+                </div>
+                <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600/20 px-4 py-1.5 rounded-full border border-red-500/30 text-[10px] text-red-100 font-bold uppercase tracking-widest backdrop-blur-lg">
+                    Professor Maya
+                </div>
+            </div>
+
+            <!-- STUDENT BOY (Walking/Moving Around) -->
+            <div id="boy-container" class="absolute bottom-4 z-30 w-[200px] md:w-[300px] pace-animation transition-all duration-300 group">
+                <div class="relative">
+                    <img id="boy-img" src="{{ url_for('static', filename='animated_boy_avatar.png') }}" 
+                         onerror="this.src='/static/animated_boy.png';"
+                         class="w-full h-auto drop-shadow-[0_0_40px_rgba(245,158,11,0.2)]" alt="Student">
+                    
+                    <!-- Boy Lip Sync Pulse (Small) -->
+                    <div class="mouth-overlay absolute top-[42%] left-[50%] w-8 h-4 bg-amber-500/20 rounded-full blur-[6px] opacity-0 transition-opacity duration-300"></div>
+                </div>
+                <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-500/20 px-4 py-1.5 rounded-full border border-amber-500/30 text-[10px] text-amber-100 font-bold uppercase tracking-widest backdrop-blur-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                    Student Rohit
+                </div>
+            </div>
+
+            <!-- CENTRAL CHALKBOARD (Teaching Text) -->
+            <div id="chalkboard" class="absolute bottom-[20%] z-10 w-[80%] max-w-lg bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-2xl shadow-3xl opacity-0 transform translate-y-10 transition-all duration-1000">
+                <p id="response-text" class="text-xl md:text-2xl font-bold text-white text-center leading-relaxed drop-shadow-md">...</p>
+                <!-- Progress Line -->
+                <div class="w-full h-1 bg-white/10 rounded-full mt-6 overflow-hidden">
+                    <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-red-500 to-amber-500 w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- INPUT FOOTER -->
+        <div id="input-controls" class="w-full max-w-2xl bg-white/5 p-4 rounded-[30px] border border-white/10 backdrop-blur-3xl shadow-2xl mb-8 flex gap-4 items-center">
+            <input type="text" id="topic-input" placeholder="Teacher, teach me about..." 
+                   class="flex-1 bg-transparent border-none focus:outline-none text-white px-6 py-4 font-bold placeholder-white/20 text-lg">
+            <button onclick="startLesson()" id="lesson-btn" class="bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black px-12 py-4 rounded-2xl transition-all shadow-xl active:scale-95 group overflow-hidden relative">
+                <span class="relative z-10">START CLASS</span>
+                <div class="absolute inset-x-0 bottom-0 top-full bg-white/20 group-hover:top-0 transition-all duration-300"></div>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Background Support -->
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 text-white/10 text-[8px] font-black uppercase tracking-[10px]">
+        DRONACHARYA HUB • INTERACTIVE CLASSROOM ENGINE
+    </div>
+</div>
+
+<style>
+    /* WALKING PACING ANIMATION for Boy */
+    .pace-animation {
+        animation: walking-pace 25s ease-in-out infinite;
+    }
+    @keyframes walking-pace {
+        0%, 100% { right: 10%; transform: rotateY(0deg) translateY(0); }
+        45% { right: 40%; transform: rotateY(0deg) translateY(-20px); }
+        50% { right: 40%; transform: rotateY(180deg) translateY(-20px); }
+        95% { right: 10%; transform: rotateY(180deg) translateY(0); }
+    }
+
+    /* TALKING LIP SYNC */
+    @keyframes lip-flap {
+        0%, 100% { transform: scale(1); opacity: 0.2; }
+        50% { transform: scale(1.6, 0.4); opacity: 0.8; }
+    }
+    .is-teaching .mouth-overlay { 
+        opacity: 1; 
+        animation: lip-flap 0.15s infinite ease-in-out; 
+    }
+    
+    /* GENTLE BREATHE ANIMAIONS */
+    #teacher-container img { animation: breathe 8s infinite ease-in-out; }
+    @keyframes breathe { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.02) translateY(-10px); } }
+    
+    #chalkboard { box-shadow: 0 0 100px rgba(239,68,68,0.05); }
+</style>
+
+<script>
+    let isClassActive = false;
+
+    async function startLesson() {
+        const topicInput = document.getElementById('topic-input');
+        const topic = topicInput.value.trim();
+        if(!topic || isClassActive) return;
+
+        isClassActive = true;
+        const btn = document.getElementById('lesson-btn');
+        const board = document.getElementById('chalkboard');
+        const text = document.getElementById('response-text');
+        const bubble = document.getElementById('status-bubble');
+        const pf = document.getElementById('progress-bar-fill');
+        const teacher = document.getElementById('teacher-container');
+        const student = document.getElementById('boy-container');
+
+        // Initial UI State
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        bubble.innerText = "PREPARING LECTURE...";
+        bubble.classList.remove('opacity-0');
+        board.classList.add('opacity-0', 'translate-y-10');
+
+        try {
+            const resp = await fetch("{{ url_for('tutor.api_professor_chat') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ topic })
+            });
+            const data = await resp.json();
+
+            if(data.success) {
+                bubble.innerText = "LECTURE IN PROGRESS";
+                text.innerText = data.response;
+                board.classList.replace('opacity-0', 'opacity-100');
+                board.classList.replace('translate-y-10', 'translate-y-0');
+
+                // Audio Playback
+                const audio = new Audio(data.audio_url);
+                
+                audio.onplay = () => {
+                    teacher.classList.add('is-teaching');
+                    // Boy looks fascinated
+                    student.style.animationPlayState = 'paused';
+                    student.style.transition = 'transform 1s';
+                    student.style.transform = 'scale(1.1) rotate(0deg)';
+                };
+
+                audio.ontimeupdate = () => {
+                    const pct = (audio.currentTime / audio.duration) * 100;
+                    pf.style.width = pct + '%';
+                };
+
+                audio.onended = () => {
+                    teacher.classList.remove('is-teaching');
+                    bubble.innerText = "CLASS DISMISSED";
+                    student.style.animationPlayState = 'running';
+                    setTimeout(resetClassroom, 4000);
+                };
+
+                audio.play();
+
+            } else {
+                alert("The classroom had a memory leak. Please enter the topic again!");
+                resetClassroom();
+            }
+
+        } catch (err) {
+            console.error(err);
+            resetClassroom();
+        }
+    }
+
+    function resetClassroom() {
+        isClassActive = false;
+        const btn = document.getElementById('lesson-btn');
+        const board = document.getElementById('chalkboard');
+        const bubble = document.getElementById('status-bubble');
+        const pf = document.getElementById('progress-bar-fill');
+
+        board.classList.replace('opacity-100', 'opacity-0');
+        board.classList.replace('translate-y-0', 'translate-y-10');
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+        bubble.classList.add('opacity-0');
+        pf.style.width = '0%';
+    }
+
+    topicInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') startLesson();
+    });
+</script>
+{% endblock %}

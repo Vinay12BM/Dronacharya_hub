@@ -4,13 +4,14 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from . import tutor_bp
-from ..models import User, Course, Video, Quiz, QuizHistory, UserCoupon, db
-from modules.text_generation import generate_gemini_quiz, generate_gemini_chat, generate_gemini_notes, generate_gemini_vision, generate_gemini_courses, generate_specific_course
+from ..models import User, Course, Video, Quiz, QuizHistory, UserCoupon, Roadmap, RoadmapTask, db
+from modules.text_generation import generate_gemini_quiz, generate_gemini_chat, generate_gemini_notes, generate_gemini_vision, generate_gemini_courses, generate_specific_course, generate_roadmap_tasks
 from modules.text_to_speech import generate_tts
 from modules.video_search import search_videos
 from modules.document_generator import create_docx
 from modules.supabase_helper import upload_file_to_supabase
 from modules.summary_helper import generate_ai_summary
+from datetime import datetime
 
 @tutor_bp.route('/')
 def welcome():
@@ -511,3 +512,54 @@ def download_live_doc():
         f.write(content)
         
     return send_file(filepath, as_attachment=True, download_name=filename)
+
+# ── RODE MAP (AI Roadmap) ──────────────────────────────────────────
+
+@tutor_bp.route('/roadmap')
+@login_required
+def roadmap():
+    roadmaps = Roadmap.query.filter_by(user_id=current_user.id).order_by(Roadmap.created_at.desc()).all()
+    return render_template('tutor/roadmap.html', roadmaps=roadmaps)
+
+@tutor_bp.route('/api/generate-roadmap', methods=['POST'])
+@login_required
+def api_generate_roadmap():
+    subject = request.json.get('subject')
+    months = request.json.get('months', 1)
+    
+    if not subject: return jsonify({'success': False, 'message': 'Missing subject'}), 400
+    
+    try:
+        tasks_data = generate_roadmap_tasks(subject, months)
+        if not tasks_data: return jsonify({'success': False, 'message': 'AI failed to generate tasks.'}), 500
+        
+        new_roadmap = Roadmap(user_id=current_user.id, subject=subject, duration=months)
+        db.session.add(new_roadmap)
+        db.session.flush() 
+        
+        for t in tasks_data:
+            task = RoadmapTask(
+                roadmap_id=new_roadmap.id,
+                day_number=t.get('day', 1),
+                topic=t.get('topic', 'Learning Session'),
+                description=t.get('description', '')
+            )
+            db.session.add(task)
+            
+        db.session.commit()
+        return jsonify({'success': True, 'roadmap_id': new_roadmap.id})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@tutor_bp.route('/api/toggle-task/<int:task_id>', methods=['POST'])
+@login_required
+def toggle_task(task_id):
+    task = RoadmapTask.query.get_or_404(task_id)
+    if task.roadmap_parent.user_id != current_user.id:
+        return jsonify({'success': False}), 403
+    
+    task.is_completed = not task.is_completed
+    task.completed_at = datetime.utcnow() if task.is_completed else None
+    db.session.commit()
+    return jsonify({'success': True, 'is_completed': task.is_completed})
