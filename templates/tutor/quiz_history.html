@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Quiz History - Dronacharya Tutor{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-12">
+  <div class="flex items-center justify-between mb-12">
+    <div>
+        <h1 style="font-family:'Cinzel',serif;" class="text-4xl font-bold text-gray-900 mb-4">Practice Log</h1>
+        <p class="text-gray-500">Review your past performance and growth.</p>
+    </div>
+    <a href="{{ url_for('tutor.quiz_page') }}" class="btn-primary btn-gold px-8 py-3 rounded-full font-bold text-sm shadow-lg">New Quiz →</a>
+  </div>
+
+  <div class="space-y-6">
+    {% for entry in history %}
+      <div class="card p-6 bg-white flex flex-col md:flex-row items-center justify-between gap-6 hover:border-amber-400 transition">
+        <div class="flex-grow">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-xs font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-full uppercase">{{ entry.date_taken.strftime('%d %b %Y, %H:%M') }}</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-1 capitalize">{{ entry.topic }}</h3>
+          <p class="text-xs text-gray-400">10 Questions Completed</p>
+        </div>
+        
+        <div class="flex items-center gap-8 pr-4">
+            <div class="text-center">
+                <div class="text-2xl font-black text-gray-900">{{ entry.score }}/{{ entry.total_questions }}</div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Score</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-black {% if entry.percentage >= 70 %}text-green-600{% elif entry.percentage >= 40 %}text-amber-500{% else %}text-red-500{% endif %}">{{ entry.percentage|round|int }}%</div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Efficiency</div>
+            </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="card p-20 text-center bg-gray-50 border-2 border-dashed">
+        <div class="text-6xl mb-6">📂</div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">The Log is Empty</h2>
+        <p class="text-gray-500 mb-8 max-w-sm mx-auto">You haven't taken any quizzes yet. Start practicing to see your journey here.</p>
+        <a href="{{ url_for('tutor.quiz_page') }}" class="btn-primary btn-gold px-12 py-3 rounded-full font-bold">Start My First Quiz</a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

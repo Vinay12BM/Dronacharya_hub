@@ -1,0 +1,118 @@
+let currentMarkdown = '', currentTopic = '', currentSource = '';
+
+// ── PAPER GENERATION ────────────────────────────────────────────
+async function generatePaper(){
+  const topic=document.getElementById('topic-input').value.trim();
+  const language=document.getElementById('language-select').value;
+  if(!topic){ showToast('Please enter a research topic.','error'); return; }
+  currentTopic=topic;
+  showSkeleton('paper-output-area');
+  const btn=document.getElementById('generate-paper-btn');
+  btn.disabled=true; btn.textContent='Generating...';
+  const msgs=['Analyzing academic sources...','Structuring your paper...','Generating references...','Finalizing content...'];
+  let mi=0; const interval=setInterval(()=>{ const el=document.getElementById('loading-msg'); if(el) el.textContent=msgs[mi++%msgs.length]; },3000);
+  try{
+    const res=await fetch('/research/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,language})});
+    const data=await res.json();
+    clearInterval(interval);
+    if(data.success){
+      currentMarkdown=data.content;
+      document.getElementById('paper-preview').innerHTML=marked.parse(currentMarkdown);
+      document.getElementById('paper-raw').value=currentMarkdown;
+      document.getElementById('paper-output-area').classList.remove('hidden');
+      document.getElementById('skeleton-area').classList.add('hidden');
+      const wc=currentMarkdown.trim().split(/\s+/).length;
+      document.getElementById('word-count').textContent=`~${wc} words`;
+      showToast('Paper generated successfully!','success');
+    } else { hideSkeleton(); showToast(data.message||'Generation failed.','error'); }
+  } catch(e){ clearInterval(interval); hideSkeleton(); showToast('Network error.','error'); }
+  finally{ btn.disabled=false; btn.textContent='Generate Paper'; }
+}
+
+async function downloadPaper(){
+  if(!currentMarkdown){ showToast('Generate a paper first.','error'); return; }
+  const fmt=document.getElementById('download-format').value.toLowerCase();
+  const btn=document.getElementById('download-btn');
+  btn.disabled=true; btn.textContent='Preparing...';
+  try{
+    const res=await fetch('/research/download',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:currentMarkdown,format:fmt})});
+    const ct=res.headers.get('content-type')||'';
+    if(ct.includes('application/json')){ const d=await res.json(); throw new Error(d.message); }
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=`research_paper.${fmt==='txt'?'txt':fmt}`; a.click(); URL.revokeObjectURL(url);
+    showToast(`${fmt.toUpperCase()} downloaded!`,'success');
+  } catch(e){ showToast('Download failed: '+e.message,'error'); }
+  finally{ btn.disabled=false; btn.textContent='⬇ Download'; }
+}
+
+async function copyPaper(){
+  if(!currentMarkdown){ showToast('Nothing to copy.','error'); return; }
+  await navigator.clipboard.writeText(currentMarkdown);
+  showToast('Copied to clipboard!','success');
+}
+
+function regeneratePaper(){ if(currentTopic){ document.getElementById('topic-input').value=currentTopic; generatePaper(); } }
+
+// ── CITATION ────────────────────────────────────────────────────
+async function generateCitation(){
+  const source=document.getElementById('citation-input').value.trim();
+  const style=document.getElementById('citation-style').value;
+  if(!source){ showToast('Enter source information.','error'); return; }
+  currentSource=source;
+  const out=document.getElementById('citation-output');
+  const btn=document.getElementById('citation-btn');
+  out.value='Generating citation...'; btn.disabled=true; btn.textContent='Generating...';
+  try{
+    const res=await fetch('/research/generate-citation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source,style})});
+    const data=await res.json();
+    out.value=data.success?data.citation:data.message||'Error';
+    if(data.success) showToast('Citation generated!','success');
+    else showToast(data.message,'error');
+  } catch(e){ out.value='Error.'; showToast('Network error.','error'); }
+  finally{ btn.disabled=false; btn.textContent='Generate Citation'; }
+}
+
+async function copyCitation(){
+  const txt=document.getElementById('citation-output').value;
+  if(!txt){ showToast('Nothing to copy.','error'); return; }
+  await navigator.clipboard.writeText(txt);
+  showToast('Citation copied!','success');
+}
+
+// ── TAB SWITCHING ───────────────────────────────────────────────
+function switchMainTab(tab){
+  ['paper','citation'].forEach(t=>{ 
+    const el = document.getElementById(t + '-tab');
+    if(el) el.classList.add('hidden'); 
+    document.querySelector(`[data-tab="${t}-tab"]`)?.classList.remove('border-b-2','border-violet-600','font-bold'); 
+  });
+  const active = document.getElementById(tab + '-tab');
+  if(active) active.classList.remove('hidden');
+  document.querySelector(`[data-tab="${tab}-tab"]`)?.classList.add('border-b-2','border-violet-600','font-bold');
+}
+
+function switchOutputTab(tab){
+  document.getElementById('paper-preview').classList.toggle('hidden', tab!=='preview');
+  document.getElementById('paper-raw').classList.toggle('hidden', tab!=='raw');
+  document.querySelectorAll('.output-tab').forEach(t=>t.classList.remove('bg-violet-100','text-violet-700'));
+  document.querySelector(`[onclick="switchOutputTab('${tab}')"]`)?.classList.add('bg-violet-100','text-violet-700');
+}
+
+// ── SKELETON + TOAST ─────────────────────────────────────────────
+function showSkeleton(area){
+  document.getElementById('skeleton-area').classList.remove('hidden');
+  const out = document.getElementById(area);
+  if(out) out.classList.add('hidden');
+  const msg = document.getElementById('loading-msg');
+  if(msg) msg.textContent='Analyzing academic sources...';
+}
+function hideSkeleton(){ document.getElementById('skeleton-area').classList.add('hidden'); }
+
+function showToast(msg, type='success'){
+  const t=document.createElement('div');
+  t.className=`fixed top-4 right-4 z-[9999] px-5 py-3 rounded-xl shadow-xl text-white text-sm font-medium transition-all ${type==='success'?'bg-green-600':'bg-red-600'}`;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}

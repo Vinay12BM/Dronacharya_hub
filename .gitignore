@@ -1,0 +1,12 @@
+venv/
+*.pyc
+__pycache__/
+.env
+instance/
+static/audio/*.mp3
+static/uploads/*
+!static/uploads/default.png
+!static/uploads/default_book.png
+static/documents/*.docx
+temp_files/*
+dronacharya.db

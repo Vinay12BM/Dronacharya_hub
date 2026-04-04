@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Results for: {{ q }} - Dronacharya Hub{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-12">
+  <div class="mb-12">
+      <a href="{{ url_for('books.browse') }}" class="text-sm font-bold text-gray-400 hover:text-green-600 flex items-center gap-1 mb-4 uppercase tracking-widest">← Back to Archive</a>
+      <h1 class="text-3xl font-bold text-gray-900 leading-none">Search results for "<span class="text-green-600 font-black italic">{{ q }}</span>"</h1>
+      <p class="text-gray-400 text-sm mt-3">{{ books|length }} matches found in global archive.</p>
+  </div>
+
+  <div class="grid md:grid-cols-4 gap-8">
+    {% for book in books %}
+      <div class="card group hover:translate-y-[-10px] transition-all bg-white shadow-2xl relative" onclick="window.location='{{ url_for('books.book_detail', id=book.id) }}'">
+        <div class="aspect-[3/4] overflow-hidden rounded-t-2xl relative">
+            <img src="{{ url_for('static', filename='uploads/' + (book.cover_image or 'default_book.png')) }}" 
+                 class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
+            <div class="absolute top-4 left-4">
+                {% if book.listing_type == 'sell' %}
+                    <span class="bg-black text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Sale</span>
+                {% elif book.listing_type == 'swap' %}
+                    <span class="bg-blue-600 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Swap</span>
+                {% else %}
+                    <span class="bg-violet-600 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Donate</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="p-6">
+            <h3 class="font-bold text-gray-900 mb-2 truncate text-xl group-hover:text-green-700 leading-tight">{{ book.title }}</h3>
+            <p class="text-[10px] text-gray-500 mb-6 flex items-center gap-1 font-black uppercase tracking-widest">📍 {{ book.address.split(',')[0] if book.address else 'Global Listing' }}</p>
+            <div class="flex items-center justify-between mt-auto">
+                <div class="text-2xl font-black text-green-700">
+                    {% if book.listing_type == 'sell' %}₹{{ book.price|int }}{% else %}{{ book.listing_type|capitalize }}{% endif %}
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-black group-hover:bg-green-600 group-hover:text-white transition shadow-sm">→</div>
+            </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="col-span-4 py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-center">
+        <div class="text-6xl mb-6">🔍</div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Nothing found</h2>
+        <p class="text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed">We searched every shelf in the archive but couldn't find "<span class="font-bold">{{ q }}</span>". Try searching for a broader term.</p>
+        <a href="{{ url_for('books.browse') }}" class="btn-primary btn-books px-12 py-3 rounded-full font-bold">Try Global Search</a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

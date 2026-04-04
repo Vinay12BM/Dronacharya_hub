@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}My Book - Local Marketplace{% endblock %}
+{% block content %}
+<section class="max-w-7xl mx-auto px-4 py-12">
+  <div class="mb-12">
+    <div class="inline-block bg-green-600/10 text-green-700 text-[10px] font-black px-4 py-2 rounded-full mb-4 uppercase tracking-[0.2em] animate-pulse">
+        Find Books Near You
+    </div>
+    <h1 style="font-family:'Cinzel',serif;" class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Read. Reuse. <span class="text-green-600">Rejoice.</span></h1>
+    <p class="text-gray-500 max-w-2xl text-lg leading-relaxed">The only local marketplace where readers find books within a few kilometers using GPS intelligence.</p>
+  </div>
+
+  <div class="mb-16">
+    <div class="card p-12 bg-white/80 backdrop-blur-3xl shadow-2xl border-t-8 border-green-600">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <h2 class="text-3xl font-black text-gray-900 mb-6">Discover Nearby Books</h2>
+                <p class="text-gray-500 mb-10 leading-relaxed italic">"A book is a gift you can open again and again. Find one in your neighborhood today."</p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button onclick="findNearbyBooks()" class="px-10 py-4 btn-primary btn-books rounded-xl font-black text-lg shadow-xl hover:shadow-2xl transition-all">📍 Find Books Near Me</button>
+                    <a href="{{ url_for('books.browse') }}" class="px-10 py-4 bg-gray-100 text-gray-700 rounded-xl font-black text-lg hover:bg-gray-200 transition text-center">Browse All →</a>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <div class="aspect-video card bg-gray-50 border-dashed border-2 flex items-center justify-center text-center p-10 group overflow-hidden relative">
+                    <div class="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent"></div>
+                    <div class="relative z-10 transition group-hover:scale-110">
+                        <div class="text-7xl mb-6 grayscale group-hover:grayscale-0 transition">🌎</div>
+                        <p class="text-gray-400 font-bold text-sm">Interactive GPS Map Activation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Nearby Section (Hidden initially) -->
+  <div id="nearby-section" class="hidden space-y-8 mb-20 fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <h2 class="text-3xl font-bold text-gray-900">Nearby Findings</h2>
+        <div class="flex items-center gap-4">
+            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Radius</label>
+            <select id="radius-select" onchange="updateNearbyRadius()" class="px-4 py-2 rounded-xl border-2 border-gray-100 text-sm font-bold bg-white cursor-pointer outline-none">
+                <option value="5">5 km</option>
+                <option value="10" selected>10 km</option>
+                <option value="25">25 km</option>
+                <option value="50">50 km</option>
+            </select>
+        </div>
+    </div>
+    <div id="nearby-map" class="h-[450px] rounded-3xl shadow-2xl border-4 border-white mb-8 relative z-10"></div>
+    <div id="nearby-status" class="text-center text-sm font-bold text-gray-400">🔍 Connecting to GPS...</div>
+    <div id="nearby-results" class="grid md:grid-cols-3 gap-6">
+        <!-- Results dynamically added -->
+    </div>
+  </div>
+
+  <div class="mb-12">
+    <h2 class="text-2xl font-bold mb-8">Featured on Dronacharya</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+        {% for book in books %}
+            <div class="card group hover:translate-y-[-10px] transition-all bg-white shadow-xl relative" onclick="window.location='{{ url_for('books.book_detail', id=book.id) }}'">
+                <div class="aspect-[3/4] overflow-hidden rounded-t-2xl relative">
+                    <img src="{{ url_for('static', filename='uploads/' + (book.cover_image or 'default_book.png')) }}" 
+                         class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
+                    <div class="absolute top-4 left-4">
+                        {% if book.listing_type == 'sell' %}
+                            <span class="bg-black text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Sale</span>
+                        {% elif book.listing_type == 'swap' %}
+                            <span class="bg-blue-600 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Swap</span>
+                        {% else %}
+                            <span class="bg-violet-600 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Donate</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="font-bold text-gray-900 mb-2 truncate text-xl group-hover:text-green-700">{{ book.title }}</h3>
+                    <p class="text-xs text-gray-500 mb-6 flex items-center gap-1">📍 {{ book.address.split(',')[0] }}</p>
+                    <div class="flex items-center justify-between mt-auto">
+                        <div class="text-2xl font-black text-green-700">
+                            {% if book.listing_type == 'sell' %}₹{{ book.price|int }}{% else %}{{ book.listing_type|capitalize }}{% endif %}
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-black group-hover:bg-green-600 group-hover:text-white transition shadow-sm">→</div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Welcome - Dronacharya Tutor{% endblock %}
+{% block content %}
+<section class="bg-blue-600 py-20 px-4 text-white text-center">
+  <div class="max-w-3xl mx-auto">
+    <h1 style="font-family:'Cinzel',serif;" class="text-4xl md:text-5xl font-bold mb-6">Master Any Subject with Dronacharya</h1>
+    <p class="text-blue-100 text-lg mb-10">AI-powered courses, personalized tutoring, and instant study resources.</p>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('tutor.dashboard') }}" class="bg-white text-blue-600 font-bold px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition">Go to Dashboard</a>
+    {% else %}
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="{{ url_for('tutor.register') }}" class="bg-white text-blue-600 font-bold px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition">Start for Free</a>
+        <a href="{{ url_for('tutor.login') }}" class="bg-blue-700 text-white font-bold px-8 py-4 rounded-full hover:bg-blue-800 transition">Login to Continue</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-8">
+  <div class="card p-8">
+    <div class="text-4xl mb-4">🤖</div>
+    <h3 class="text-xl font-bold mb-2">AI Chat Tutor</h3>
+    <p class="text-gray-500 text-sm">Chat with Dronacharya AI to get instant answers, explanations, and guidance on any topic.</p>
+  </div>
+  <div class="card p-8">
+    <div class="text-4xl mb-4">📝</div>
+    <h3 class="text-xl font-bold mb-2">Smart Quizzes</h3>
+    <p class="text-gray-500 text-sm">Generate AI-powered MCQs on any subject and track your learning progress with history.</p>
+  </div>
+  <div class="card p-8">
+    <div class="text-4xl mb-4">📄</div>
+    <h3 class="text-xl font-bold mb-2">Study Notes</h3>
+    <p class="text-gray-500 text-sm">Enter a topic and instantly get structured study notes to download as DOCX for offline reading.</p>
+  </div>
+</section>
+{% endblock %}

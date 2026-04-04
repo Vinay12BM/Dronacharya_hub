@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Explanation: {{ question }} - Dronacharya Tutor{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-12">
+  <div class="mb-12">
+      <h1 class="text-gray-400 font-bold uppercase tracking-widest text-xs mb-2">Topic Investigation</h1>
+      <h2 style="font-family:'Cinzel',serif;" class="text-3xl font-bold text-gray-900 leading-tight">"{{ question }}"</h2>
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-12">
+    <!-- Left: Answer -->
+    <div class="lg:col-span-2 space-y-10">
+      <!-- AI Answer -->
+      <div class="card p-10 bg-white shadow-2xl border-l-[12px] border-blue-600">
+          <div class="flex items-center justify-between mb-8">
+              <h3 class="font-bold text-blue-900 flex items-center gap-2 text-xl">
+                  <span>🤖</span> Dronacharya Assistant Says:
+              </h3>
+              {% if audio_url %}
+              <div class="flex items-center gap-3 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 text-blue-600 font-bold text-xs">
+                  <span>🔊</span> Listen Now
+                  <audio src="{{ audio_url }}" id="lesson-audio" class="hidden"></audio>
+                  <button onclick="document.getElementById('lesson-audio').play()" class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md">▶</button>
+              </div>
+              {% endif %}
+          </div>
+          <div id="answer-content" class="text-gray-700 leading-relaxed text-lg space-y-4">
+              {{ answer|safe }}
+          </div>
+      </div>
+
+      <!-- Video Gallery -->
+      <div>
+          <h3 class="text-2xl font-bold mb-6">Expert YouTube Insights</h3>
+          <div class="grid md:grid-cols-3 gap-6">
+              {% for video in videos %}
+                  <a href="{{ video.video_url }}" target="_blank" class="card overflow-hidden group hover:translate-y-[-4px] transition-all">
+                      <div class="aspect-video relative">
+                          <img src="{{ video.thumbnail }}" class="w-full h-full object-cover">
+                          <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition flex items-center justify-center">
+                              <span class="text-white text-3xl opacity-0 group-hover:opacity-100 transition shadow-lg">▶️</span>
+                          </div>
+                      </div>
+                      <div class="p-4">
+                          <h4 class="font-bold text-gray-900 text-sm line-clamp-2 leading-tight">{{ video.title }}</h4>
+                          <p class="text-[10px] text-blue-600 font-bold mt-2 uppercase">Watch on YouTube</p>
+                      </div>
+                  </a>
+              {% endfor %}
+          </div>
+      </div>
+    </div>
+
+    <!-- Right: Context -->
+    <div class="space-y-6">
+        <div class="card p-8 bg-blue-900 text-white border-none shadow-xl sticky top-24 overflow-hidden relative">
+            <div class="absolute -right-8 -bottom-8 text-white/10 rotate-12 scale-150">🏹</div>
+            <h3 class="font-bold text-lg mb-4 opacity-100 relative z-10">Wise Words</h3>
+            <p class="text-sm opacity-80 leading-relaxed italic relative z-10 mb-8">"Tell me and I forget. Teach me and I remember. Involve me and I learn."</p>
+            <div class="space-y-4 relative z-10">
+                <a href="{{ url_for('tutor.chat_page') }}" class="w-full block bg-white/10 hover:bg-white/20 p-4 rounded-2xl border border-white/10 transition text-sm font-bold">💬 Chat more with AI</a>
+                <a href="{{ url_for('tutor.quiz_page') }}" class="w-full block bg-white/10 hover:bg-white/20 p-4 rounded-2xl border border-white/10 transition text-sm font-bold">🏆 Take a Quiz now</a>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById('answer-content');
+        if(el) el.innerHTML = marked.parse(el.innerHTML);
+    });
+</script>
+{% endblock %}

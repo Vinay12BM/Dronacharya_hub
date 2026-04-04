@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}List Your Book - Dronacharya Hub{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-12">
+  <div class="text-center mb-12 flex flex-col items-center">
+    <div class="text-6xl mb-6 grayscale hover:grayscale-0 transition animate-bounce">📖</div>
+    <h1 style="font-family:'Cinzel',serif; font-size:48px;" class="font-black text-gray-900 leading-none mb-4 uppercase">Archive a Book</h1>
+    <p class="text-gray-500 max-w-sm mx-auto leading-relaxed italic">"A room without books is like a body without a soul. Give your book a new soul today."</p>
+  </div>
+
+  <form action="{{ url_for('books.list_book') }}" method="POST" enctype="multipart/form-data" onsubmit="return validateListForm()" class="space-y-8">
+    
+    <!-- Section 1: Book Essence -->
+    <div class="card p-10 bg-white shadow-2xl border-t-8 border-green-600 space-y-8">
+        <h3 class="text-xl font-bold border-b border-gray-100 pb-4">Essential Wisdom</h3>
+        <div class="grid md:grid-cols-2 gap-8 items-start">
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Book Title</label>
+                    <input type="text" name="title" required class="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-green-600 transition outline-none text-lg font-bold" placeholder="e.g., The Secret of Life">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Listing Type</label>
+                        <div class="flex gap-2 p-1 bg-gray-50 rounded-2xl border border-gray-100">
+                            <input type="hidden" name="listing_type" id="listing-type-input" value="sell">
+                            <button type="button" onclick="selectListingType('sell', this)" class="listing-type-btn flex-1 py-3 px-3 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all bg-green-50 border-2 border-green-600 text-green-700">Sell</button>
+                            <button type="button" onclick="selectListingType('swap', this)" class="listing-type-btn flex-1 py-3 px-3 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all bg-white border-2 border-gray-100 text-gray-400">Swap</button>
+                            <button type="button" onclick="selectListingType('donate', this)" class="listing-type-btn flex-1 py-3 px-3 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all bg-white border-2 border-gray-100 text-gray-400">Free</button>
+                        </div>
+                    </div>
+                    <div id="price-field">
+                        <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Price (₹)</label>
+                        <input type="number" name="price" value="0" class="w-full px-6 py-3 rounded-2xl border-2 border-gray-100 focus:border-green-600 transition outline-none text-lg font-bold" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload -->
+            <div class="flex flex-col items-center">
+                <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 self-start md:self-center">Cover Preview</label>
+                <label class="w-full aspect-[3/4] card bg-gray-50 border-dashed border-2 flex items-center justify-center text-center p-4 cursor-pointer hover:border-green-400 group relative">
+                    <input type="file" name="cover_image" class="hidden" onchange="previewCoverImage(this)">
+                    <img id="cover-preview" src="" class="absolute inset-0 w-full h-full object-cover hidden rounded-2xl">
+                    <div id="upload-placeholder" class="group-hover:scale-110 transition">
+                        <div class="text-4xl grayscale group-hover:grayscale-0 transition mb-4">🖼️</div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Cover Photo</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div>
+                <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Genre</label>
+                <input type="text" name="genre" class="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-green-600 transition outline-none text-sm font-bold" placeholder="Fiction, Science, History...">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Book Condition</label>
+                <select name="condition" class="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-green-600 transition outline-none text-sm font-bold bg-white cursor-pointer">
+                    <option value="New">New</option>
+                    <option value="Good" selected>Good / Used</option>
+                    <option value="Fair">Fair / Old</option>
+                    <option value="Poor">Poor / Damaged</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Brief Context (Optional)</label>
+            <textarea name="description" rows="3" class="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-green-600 transition outline-none text-sm font-medium leading-relaxed" placeholder="Tell the next reader what this book meant to you..."></textarea>
+        </div>
+    </div>
+
+    <!-- Section 2: Seller's Trace -->
+    <div class="card p-10 bg-white shadow-2xl border-t-8 border-black space-y-8">
+        <h3 class="text-xl font-bold border-b border-gray-100 pb-4">Seller identity</h3>
+        <div class="grid md:grid-cols-2 gap-8">
+            <div>
+                <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Expert Name</label>
+                <input type="text" name="seller_name" required class="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-green-600 transition outline-none text-sm font-bold" placeholder="Your Name">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Contact Intelligence (WhatsApp Phone)</label>
+                <div class="flex gap-1 items-center bg-gray-50 px-4 py-4 rounded-2xl border-2 border-gray-100">
+                    <span class="text-sm font-bold text-gray-400">+91</span>
+                    <input type="text" name="seller_phone" required class="bg-transparent focus:outline-none text-sm font-bold w-full" placeholder="9876543210 (10 digits)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: GPS Coordinates -->
+    <div class="card p-10 bg-white shadow-2xl border-t-8 border-violet-600 space-y-8">
+        <h3 class="text-xl font-bold border-b border-gray-100 pb-4">GPS location</h3>
+        <p class="text-xs text-gray-400 leading-relaxed font-bold uppercase tracking-widest text-center">Buyers find books based on distance. Enable GPS for a fast sale.</p>
+        
+        <div class="flex flex-col items-center gap-6">
+            <button type="button" id="location-btn" onclick="getSellerLocation()" class="px-10 py-5 bg-violet-600 text-white rounded-3xl font-black text-lg shadow-2xl hover:scale-[1.05] transition-transform flex items-center justify-center gap-4">
+               📍 <span>Use My Current Location</span>
+            </button>
+            <div id="location-status" class="hidden"></div>
+            
+            <input type="hidden" name="latitude" id="lat-input" value="0">
+            <input type="hidden" name="longitude" id="lon-input" value="0">
+            <input type="hidden" name="address" id="addr-input" value="">
+            
+            <div id="address-display" class="hidden text-center p-6 bg-violet-50 rounded-3xl border border-violet-100 max-w-xl mx-auto">
+                <div class="text-[10px] text-violet-400 font-bold uppercase tracking-[0.3em] mb-2">Archive Address Pin</div>
+                <p id="address-text" class="text-sm font-black text-violet-900 leading-relaxed"></p>
+            </div>
+            
+            <p id="map-hint" class="hidden text-xs text-gray-400 font-bold uppercase tracking-widest">Optional: Drag the pin to fine-tune</p>
+            <div id="seller-map" class="hidden h-[350px] w-full rounded-3xl shadow-2xl border-4 border-white overflow-hidden z-10"></div>
+        </div>
+    </div>
+
+    <div class="flex justify-center pt-8">
+        <button type="submit" class="px-16 py-6 btn-primary btn-books rounded-full font-black text-2xl shadow-[0_20px_60px_rgba(27,67,50,0.3)] hover:translate-y-[-5px] transition-all uppercase tracking-widest">Register This Book →</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

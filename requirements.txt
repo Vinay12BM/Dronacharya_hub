@@ -1,0 +1,17 @@
+Flask
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.25
+Flask-Migrate
+Flask-Login
+Flask-Cors
+Werkzeug
+google-generativeai
+gtts
+pypandoc
+yt-dlp
+python-docx
+python-dotenv
+psycopg2-binary
+gunicorn
+markupsafe
+jinja2

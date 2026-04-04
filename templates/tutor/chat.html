@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}AI Chat - Dronacharya Tutor{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-12 h-[calc(100vh-200px)] min-h-[600px] flex flex-col">
+  <div class="text-center mb-8">
+    <h1 style="font-family:'Cinzel',serif;" class="text-3xl font-bold text-gray-900 mb-2">Dronacharya AI Assistant</h1>
+    <p class="text-gray-500 text-sm italic">"Ask, and the light of knowledge shall shine upon your doubts."</p>
+  </div>
+
+  <div id="chat-messages" class="flex-grow overflow-y-auto mb-6 space-y-4 p-6 scroll-smooth bg-gray-50/50 rounded-3xl border border-gray-100 shadow-inner">
+    <div class="flex justify-start mb-3">
+        <div class="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-sm max-w-sm text-sm text-gray-800 shadow-sm">
+            Greetings, seeker of truth. I am Dronacharya. How may I assist your learning journey today?
+        </div>
+    </div>
+  </div>
+
+  <div class="relative group">
+    <textarea id="chat-input" rows="2" 
+              class="w-full pl-6 pr-16 py-4 rounded-3xl border-2 border-blue-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition outline-none text-base resize-none shadow-xl bg-white/90 backdrop-blur-xl" 
+              placeholder="Type your question here... (Shift+Enter for newline)"></textarea>
+    <button onclick="sendChatMessage()" 
+            class="absolute right-4 bottom-4 btn-primary btn-tutor p-3 rounded-2xl w-12 h-12 shadow-xl hover:scale-105 transition-transform flex items-center justify-center">
+        🚀
+    </button>
+  </div>
+</div>
+{% endblock %}
