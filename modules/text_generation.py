@@ -4,8 +4,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-model_id = 'gemini-2.0-flash-lite' # Latest available stable-lite model
-fallback_models = ['gemini-2.0-flash', 'gemini-pro-latest', 'gemini-2.5-flash-lite', 'gemini-3-flash-preview']
+model_id = 'gemini-2.0-flash' # Primary 2.0 model
+fallback_models = ['gemini-2.0-flash-lite', 'gemini-pro-latest', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-1.5-pro']
+
 
 
 def serialize_history(history):
@@ -39,15 +40,18 @@ def generate_gemini_quiz(topic):
         err_msg = str(e)
         print(f"Gemini Quiz Error: {err_msg}")
         if "429" in err_msg or "quota" in err_msg.lower():
-            # Try fallbacks
+            # Try fallbacks with a tiny delay
+            import time
             for fb_model in fallback_models:
                 try:
+                    time.sleep(1) # Tiny pause to avoid spamming
                     response = client.models.generate_content(model=fb_model, contents=system_instruction)
                     text = response.text.strip()
                     if '```json' in text: text = text.split('```json')[1].split('```')[0].strip()
                     return json.loads(text)
                 except:
                     continue
+
             return [
                 {"question": f"Which of the following describes a core aspect of {topic}?", "options": {"A": "Option 1", "B": "Option 2", "C": "Correct Principle", "D": "None"}, "answer": "C"},
                 {"question": f"True or False: {topic} is widely used in modern education.", "options": {"A": "True", "B": "False", "C": "Maybe", "D": "Not sure"}, "answer": "A"}
@@ -73,13 +77,16 @@ def generate_gemini_chat(message, history):
         err_msg = str(e)
         print(f"Gemini Chat Error: {err_msg}")
         if "429" in err_msg or "quota" in err_msg.lower():
+            import time
             for fb_model in fallback_models:
                 try:
+                    time.sleep(1)
                     chat = client.chats.create(model=fb_model, config={'system_instruction': system_instruction}, history=history)
                     response = chat.send_message(message)
                     return response.text, serialize_history(chat.history)
                 except:
                     continue
+
         return "I am currently unable to answer that. Please try again later.", history
 
 def generate_tumtum_chat(message, history):
@@ -94,13 +101,16 @@ def generate_tumtum_chat(message, history):
         err_msg = str(e)
         print(f"TumTum API Error: {err_msg}")
         if "429" in err_msg or "quota" in err_msg.lower():
+            import time
             for fb_model in fallback_models:
                 try:
+                    time.sleep(1)
                     chat = client.chats.create(model=fb_model, history=history)
                     response = chat.send_message(message)
                     return response.text, serialize_history(chat.history)
                 except:
                     continue
+
         return f"AI Assistant Error: {err_msg}", history
 
 def generate_gemini_paper(topic, language):
