@@ -64,17 +64,26 @@ def create_app():
         def home():
             return render_template('home.html')
 
-        db.create_all()
+        # Database initialization moved out of blocking flow to prevent Render port-scan timeout
+        # Ideally run this via a release command or a one-time setup script
+        # db.create_all()
 
-        # Auto-seed the database in a background thread if it's empty (fresh deployment)
-        from .models import Course
-        if Course.query.first() is None:
-            import threading
-            from .seed_helper import auto_seed_courses
-            def run_seed(app_instance, db_instance):
-                with app_instance.app_context():
-                    auto_seed_courses(db_instance)
-            threading.Thread(target=run_seed, args=(app, db)).start()
+        # Background seeding (non-blocking) fallback
+        def try_background_setup(app_instance, db_instance):
+            with app_instance.app_context():
+                try:
+                    # Always try to create tables first (won't hurt if they exist)
+                    db_instance.create_all()
+                    
+                    from .models import Course
+                    if Course.query.first() is None:
+                        from .seed_helper import auto_seed_courses
+                        auto_seed_courses(db_instance)
+                except Exception as e:
+                    print(f"Background setup warning: {e}")
+
+        import threading
+        threading.Thread(target=try_background_setup, args=(app, db), daemon=True).start()
 
     return app
 
