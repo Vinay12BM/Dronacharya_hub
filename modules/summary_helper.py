@@ -1,5 +1,6 @@
 import re
 import time
+import json
 import urllib.request
 import urllib.error
 from urllib.parse import urlparse, parse_qs
@@ -25,47 +26,43 @@ def fetch_url_content(url):
     # Check if youtube
     yt_id = get_youtube_video_id(url)
     if yt_id:
-        # Try all known patterns for the youtube-transcript-api
+        # 1. Try Official Transcript API (only once to avoid triggering 429)
         try:
-            return " ".join([t['text'] for t in YouTubeTranscriptApi.get_transcript(yt_id)])
-        except: pass
+            transcript = YouTubeTranscriptApi.get_transcript(yt_id)
+            return " ".join([t['text'] for t in transcript])
+        except Exception as e:
+            # Check if it's a rate limit error to avoid further spamming
+            if "429" in str(e):
+                print(f"YouTube Transcript 429: {e}")
+            pass
         
+        # 2. Try the Official OEmbed API for metadata (more reliable than scraping)
         try:
-            return " ".join([t['text'] for t in youtube_transcript_api.get_transcript(yt_id)])
-        except: pass
+            oembed_url = f"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={yt_id}&format=json"
+            oembed_req = urllib.request.Request(oembed_url, headers={'User-Agent': 'Mozilla/5.0'})
+            oembed_resp = urllib.request.urlopen(oembed_req, timeout=5).read().decode('utf-8')
+            metadata = json.loads(oembed_resp)
+            title = metadata.get('title', 'Unknown Title')
+            author = metadata.get('author_name', 'Unknown Author')
+            return f"VIDEO_TITLE: {title}\nVIDEO_AUTHOR: {author}\n(Note: Official transcript was unavailable due to rate limits. Summary will be based on available metadata.)"
+        except:
+            pass
 
-        try:
-            transcript_list = YouTubeTranscriptApi.list_transcripts(yt_id)
-            return " ".join([t['text'] for t in next(iter(transcript_list)).fetch()])
-        except: pass
-
-        try:
-            # Try instantiation if it's an instance method issue
-            api = YouTubeTranscriptApi()
-            return " ".join([t['text'] for t in api.get_transcript(yt_id)])
-        except: pass
-
-        try:
-            api = YouTubeTranscriptApi()
-            return " ".join([t['text'] for t in api.list(yt_id).fetch()])
-        except: pass
-
-        # SUPER FALLBACK: If transcript fails, scrape the YouTube Page metadata/description
+        # 3. Last Resort: Scrape the YouTube Page for metadata
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            html = urllib.request.urlopen(req, timeout=10).read().decode('utf-8')
-            soup = BeautifulSoup(html, 'html.parser')
+            # We use a shorter timeout and small read to minimize footprint
+            html = urllib.request.urlopen(req, timeout=10).read(50000).decode('utf-8', errors='ignore')
             
-            # Find title and description from meta tags (YouTube hides them inside scripts usually, but meta is reliable)
-            title = soup.find("meta", property="og:title")
-            desc = soup.find("meta", property="og:description")
+            title_match = re.search(r'<title>(.*?)</title>', html)
+            desc_match = re.search(r'name="description"\s+content="(.*?)"', html) or re.search(r'property="og:description"\s+content="(.*?)"', html)
             
-            title_text = title["content"] if title else "Unknown Video"
-            desc_text = desc["content"] if desc else "No description available"
+            title_text = title_match.group(1).replace(' - YouTube', '') if title_match else "Metadata Unavailable"
+            desc_text = desc_match.group(1) if desc_match else "Description Unavailable"
             
-            return f"VIDEO_TITLE: {title_text}\nVIDEO_DESCRIPTION: {desc_text}\n(Note: Using video description as transcript was unavailable)"
+            return f"VIDEO_TITLE: {title_text}\nVIDEO_DESCRIPTION: {desc_text}\n(Note: Transcript was unavailable. Using video metadata.)"
         except Exception as scrap_e:
-            return f"TRANSCRIPT_ERROR: {scrap_e}. Could not retrieve transcript from {yt_id}."
+            return f"TRANSCRIPT_ERROR: {scrap_e}. YouTube is currently restricting automated access. Please share the key points you'd like summarized instead."
     
     # Generic web page
     try:
