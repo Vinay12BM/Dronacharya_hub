@@ -4,8 +4,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-model_id = 'gemini-1.5-flash' # More reliable for free tier
-fallback_models = ['gemini-2.0-flash-lite', 'gemini-pro-latest', 'gemini-2.0-flash', 'gemini-1.5-pro']
+model_id = 'gemini-2.0-flash-lite' # Latest available stable-lite model
+fallback_models = ['gemini-2.0-flash', 'gemini-pro-latest', 'gemini-2.5-flash-lite', 'gemini-3-flash-preview']
+
 
 def serialize_history(history):
     if history is None: return []
