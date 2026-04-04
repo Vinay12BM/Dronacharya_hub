@@ -27,11 +27,11 @@ def generate_with_fallback(prompt, sys_instr=None):
             e_str = str(e).lower()
             if "429" in e_str or "quota" in e_str or "limit" in e_str:
                 print(f"Model {m} hit quota. Trying fallback...")
-                time.sleep(1) 
+                time.sleep(0.1) 
                 continue
             elif "503" in e_str or "unavailable" in e_str:
                 print(f"Model {m} unavailable. Trying fallback...")
-                time.sleep(1)
+                time.sleep(0.1)
                 continue
             else:
                 # Other error, let's still try to fall back just in case
@@ -107,7 +107,7 @@ def generate_gemini_quiz(topic):
             import time
             for fb_model in fallback_models:
                 try:
-                    time.sleep(1) # Tiny pause to avoid spamming
+                    time.sleep(0.1) # Tiny pause to avoid spamming
                     response = client.models.generate_content(model=fb_model, contents=system_instruction)
                     text = response.text.strip()
                     if '```json' in text: text = text.split('```json')[1].split('```')[0].strip()
@@ -143,7 +143,7 @@ def generate_gemini_chat(message, history):
             import time
             for fb_model in fallback_models:
                 try:
-                    time.sleep(1)
+                    time.sleep(0.1)
                     chat = client.chats.create(model=fb_model, config={'system_instruction': system_instruction}, history=history)
                     response = chat.send_message(message)
                     return response.text, serialize_history(chat.history)
@@ -183,7 +183,7 @@ def generate_tumtum_chat(message, history):
             import time
             for fb_model in fallback_models:
                 try:
-                    time.sleep(1)
+                    time.sleep(0.1)
                     chat = client.chats.create(model=fb_model, config={'system_instruction': system_instruction}, history=history)
                     response = chat.send_message(message)
                     return response.text, serialize_history(chat.history)
@@ -464,7 +464,7 @@ def generate_gemini_vision(image_path, prompt="Solve this educational problem or
              for fb_model in fallback_models:
                 try:
                     import time
-                    time.sleep(1)
+                    time.sleep(0.1)
                     with open(image_path, 'rb') as f:
                          image_data = f.read()
                     response = client.models.generate_content(
@@ -657,7 +657,7 @@ def classify_document_type(file_path):
             print(f"Primary classification failed, trying fallbacks: {e}")
             for fb_model in fallback_models:
                 try:
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                     response = client.models.generate_content(
                         model=fb_model,
                         contents=[

@@ -57,7 +57,7 @@ body {
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     border-radius: 32px;
     overflow: hidden;
     position: relative;
@@ -70,7 +70,7 @@ body {
     top: 0; left: 0; right: 0; bottom: 0;
     background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(67, 97, 238, 0.08) 0%, transparent 80%);
     opacity: 0;
-    transition: opacity 0.5s;
+    transition: opacity 0.3s;
     pointer-events: none;
     z-index: -1;
 }
@@ -90,7 +90,7 @@ body {
     background: linear-gradient(135deg, var(--brand), var(--brand-mid));
     color: white; padding: 14px 36px; border-radius: 100px;
     font-weight: 700; font-family: 'Sora', sans-serif;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: none; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center; gap: 12px;
     box-shadow: 0 10px 20px -5px rgba(11, 20, 55, 0.3);
@@ -130,15 +130,15 @@ body {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
 }
-.fade-in { animation: ultra-fade 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
-.page-fade-in { animation: ultra-fade 1s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+.fade-in { animation: ultra-fade 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+.page-fade-in { animation: ultra-fade 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
 
 .fade-in-1 { animation-delay: 0.1s; opacity: 0; }
 .fade-in-2 { animation-delay: 0.25s; opacity: 0; }
 .fade-in-3 { animation-delay: 0.4s; opacity: 0; }
 
 /* ─── TYPOGRAPHY ─── */
-h1 { font-family: 'Cinzel', serif; font-weight: 700; color: #ffffff; letter-spacing: -0.01em; }
+h1 { font-family: 'Cinzel', serif; font-weight: 700; color: #ffffff; letter-spacing: -0.01em; margin-bottom: 0px !important; }
 h2, h3 { font-family: 'Sora', sans-serif; font-weight: 700; color: var(--brand); letter-spacing: -0.02em; }
 
 /* ─── WHATSAPP PULSE ─── */

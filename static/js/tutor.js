@@ -99,7 +99,7 @@ function selectOption(key, btn, q){
     btn.className=btn.className.replace('border-gray-200','border-red-400 bg-red-50');
     document.querySelectorAll('#q-options button').forEach(b=>{ if(b.textContent.startsWith(correct)) b.className=b.className.replace('border-gray-200','border-green-500 bg-green-50'); });
   }
-  setTimeout(()=>{ if(currentQuestion<quiz.length-1){ currentQuestion++; showQuestion(); } else showResults(); },1500);
+  setTimeout(()=>{ if(currentQuestion<quiz.length-1){ currentQuestion++; showQuestion(); } else showResults(); },800);
 }
 
 function startTimer(){
