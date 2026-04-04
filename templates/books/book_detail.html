@@ -66,14 +66,22 @@
         </div>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-6 mb-10">
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           <a href="{{ wa_url }}" target="_blank" class="w-full btn-whatsapp px-8 py-5 rounded-3xl font-black text-xl flex items-center justify-center gap-3 shadow-2xl hover:scale-[1.02] transition shadow-green-500/30">
               💬 <span class="uppercase tracking-widest">WhatsApp Chat</span>
           </a>
           <a href="tel:+91{{ book.seller_phone.replace(' ','').replace('-','') }}" class="w-full bg-black text-white px-8 py-5 rounded-3xl font-black text-xl flex items-center justify-center gap-3 shadow-2xl hover:scale-[1.02] transition shadow-gray-900/30">
               📞 <span class="uppercase tracking-widest">Call Seller</span>
           </a>
+          {% if current_user.is_authenticated and book.user_id == current_user.id %}
+          <form action="{{ url_for('books.delete_book', id=book.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this book listing?');" class="md:col-span-2 lg:col-span-1">
+              <button type="submit" class="w-full h-full bg-red-600 text-white px-8 py-5 rounded-3xl font-black text-xl flex items-center justify-center gap-3 shadow-2xl hover:scale-[1.02] transition shadow-red-900/30 uppercase tracking-widest">
+                  🗑️ Delete
+              </button>
+          </form>
+          {% endif %}
       </div>
+
 
       <div class="space-y-4">
           <h3 class="text-xl font-bold flex items-center gap-2"><span>📍</span> Collector's Location</h3>

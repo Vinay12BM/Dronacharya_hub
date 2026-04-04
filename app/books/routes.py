@@ -1,9 +1,11 @@
 import os, urllib.parse, uuid
 from flask import render_template, request, redirect, url_for, jsonify, current_app, flash
+from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 from . import books_bp
 from ..models import Book, haversine_km, db
 from modules.supabase_helper import upload_file_to_supabase
+
 
 @books_bp.route('/')
 def index():
@@ -66,10 +68,12 @@ def list_book():
             title=title, price=price, seller_name=seller_name, seller_phone=seller_phone,
             latitude=latitude, longitude=longitude, address=address,
             genre=genre, condition=condition, description=description,
-            listing_type=listing_type, cover_image=filename
+            listing_type=listing_type, cover_image=filename,
+            user_id=current_user.id if current_user.is_authenticated else None
         )
         db.session.add(new_book)
         db.session.commit()
+
         print(f"DEBUG: Book '{title}' committed to database.")
         flash('Book listed successfully!', 'success')
         return redirect(url_for('books.browse'))
@@ -131,3 +135,34 @@ def api_nearby():
             })
     nearby.sort(key=lambda x: x['distance_km'])
     return jsonify(nearby)
+
+@books_bp.route('/delete/<int:id>', methods=['POST'])
+@login_required
+def delete_book(id):
+    book = Book.query.get_or_404(id)
+    
+    if book.user_id != current_user.id:
+        flash('You do not have permission to delete this book.', 'danger')
+        return redirect(url_for('books.browse'))
+    
+    try:
+        # Delete image from storage
+        if book.cover_image:
+            if book.cover_image.startswith('http'):
+                from modules.supabase_helper import delete_file_from_supabase
+                path_part = book.cover_image.split('/books/')[-1]
+                delete_file_from_supabase('dronacharya', f"books/{path_part}")
+            else:
+                local_path = os.path.join(current_app.config['UPLOAD_FOLDER'], book.cover_image)
+                if os.path.exists(local_path):
+                    os.remove(local_path)
+        
+        db.session.delete(book)
+        db.session.commit()
+        flash('Book deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting book: {str(e)}', 'danger')
+        
+    return redirect(url_for('books.browse'))
+

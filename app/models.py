@@ -98,6 +98,9 @@ class Book(db.Model):
     is_available  = db.Column(db.Boolean, default=True)
     date_listed   = db.Column(db.DateTime, default=datetime.utcnow)
     views         = db.Column(db.Integer, default=0)
+    user_id       = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) # owner
+    user          = db.relationship('User', backref=db.backref('books', lazy=True))
+
 
 # ─────────────────────────────────────────
 # NOTES MODEL
@@ -112,6 +115,9 @@ class Note(db.Model):
     file_path     = db.Column(db.String(200), nullable=False)
     uploader_name = db.Column(db.String(100), nullable=False)
     date_uploaded = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id       = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) # owner
+    user          = db.relationship('User', backref=db.backref('notes', lazy=True))
+
 
 # ─────────────────────────────────────────
 # COUPON MODEL

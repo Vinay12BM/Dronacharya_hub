@@ -71,7 +71,8 @@ def upload():
                 subject=request.form.get('subject'),
                 description=request.form.get('description'),
                 file_path=final_path,
-                uploader_name=current_user.first_name if current_user.is_authenticated else request.form.get('uploader_name', 'Anonymous')
+                uploader_name=current_user.first_name if current_user.is_authenticated else request.form.get('uploader_name', 'Anonymous'),
+                user_id=current_user.id if current_user.is_authenticated else None
             )
             
             db.session.add(new_note)
@@ -107,3 +108,38 @@ def upload():
             flash('Allowed file types are: png, jpg, jpeg, gif, webp, pdf', 'danger')
             
     return render_template('notes/upload.html')
+
+@notes_bp.route('/delete/<int:note_id>', methods=['POST'])
+@login_required
+def delete_note(note_id):
+    note = Note.query.get_or_404(note_id)
+    
+    # Permission check: Only owner or admin (if you have admins) can delete
+    if note.user_id != current_user.id:
+        flash('You do not have permission to delete this note.', 'danger')
+        return redirect(url_for('notes.index'))
+    
+    try:
+        # 1. Delete actual file if it exists
+        if note.file_path.startswith('http'):
+            # It's a Supabase URL, try to extract path and delete
+            # Supabase URLs look like: https://.../storage/v1/object/public/bucket/notes/unique_filename
+            from modules.supabase_helper import delete_file_from_supabase
+            path_part = note.file_path.split('/notes/')[-1]
+            delete_file_from_supabase('dronacharya', f"notes/{path_part}")
+        else:
+            # Local file
+            local_path = os.path.join(current_app.config['NOTES_FOLDER'], note.file_path)
+            if os.path.exists(local_path):
+                os.remove(local_path)
+        
+        # 2. Delete from DB
+        db.session.delete(note)
+        db.session.commit()
+        flash('Note deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting note: {str(e)}', 'danger')
+        
+    return redirect(url_for('notes.index'))
+
