@@ -19,5 +19,4 @@ class Config:
     TEMP_FOLDER   = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'temp_files')
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf'}
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB
-    SUPABASE_URL       = os.environ.get('SUPABASE_URL')
-    SUPABASE_KEY       = os.environ.get('SUPABASE_KEY')
+

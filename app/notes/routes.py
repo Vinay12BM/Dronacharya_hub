@@ -31,15 +31,11 @@ def upload():
             return redirect(request.url)
             
         if file and allowed_file(file.filename):
-            from modules.supabase_helper import upload_file_to_supabase
-            s_url = upload_file_to_supabase(file, folder="notes")
-            if s_url:
-                unique_filename = s_url
-            else:
-                filename = secure_filename(file.filename)
-                unique_filename = f"{uuid.uuid4().hex}_{filename}"
-                file_path = os.path.join(current_app.config['NOTES_FOLDER'], unique_filename)
-                file.save(file_path)
+            filename = secure_filename(file.filename)
+            unique_filename = f"{uuid.uuid4().hex}_{filename}"
+            file_path = os.path.join(current_app.config['NOTES_FOLDER'], unique_filename)
+            file.save(file_path)
+
             
             new_note = Note(
                 title=request.form.get('title'),

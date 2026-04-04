@@ -173,16 +173,11 @@ def profile():
         if 'profile_pic' in request.files:
             file = request.files['profile_pic']
             if file and file.filename != '':
-                from modules.supabase_helper import upload_file_to_supabase
-                # Try Supabase first
-                s_url = upload_file_to_supabase(file, folder="avatars")
-                if s_url:
-                    current_user.profile_pic = s_url
-                else:
-                    # LOCAL FALLBACK
-                    filename = secure_filename(f"avatar_{current_user.id}_{file.filename}")
-                    file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-                    current_user.profile_pic = filename
+                # LOCAL SAVE
+                filename = secure_filename(f"avatar_{current_user.id}_{file.filename}")
+                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+                current_user.profile_pic = filename
+
         
         db.session.commit()
         flash('Profile updated!', 'success')
