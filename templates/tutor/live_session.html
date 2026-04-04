@@ -147,21 +147,59 @@
             </div>
         </div>
 
-        <!-- Transcript Right Side -->
-        <div class="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden flex flex-col h-[500px] lg:h-auto z-10">
-            <div class="bg-gray-50 border-b border-gray-100 p-5 flex items-center gap-3">
-                <div class="p-2 bg-blue-100 rounded-lg text-blue-600 text-lg">📝</div>
-                <div>
-                    <h3 class="font-bold text-gray-800">Live Transcript & Translation</h3>
-                    <p class="text-xs text-gray-500" id="translating-to-text">Translating to English...</p>
-                </div>
+        <!-- Right Side Sidebar (Tabs for Transcript and Chat) -->
+        <div class="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden flex flex-col h-[600px] lg:h-auto z-10">
+            <!-- Tabs Header -->
+            <div class="bg-gray-50 border-b border-gray-100 flex">
+                <button onclick="switchTab('transcript')" id="tab-btn-transcript" class="flex-1 py-4 text-sm font-bold border-b-2 border-blue-500 text-blue-600 flex items-center justify-center gap-2 transition-all">
+                    📝 Transcript
+                </button>
+                <button onclick="switchTab('chat')" id="tab-btn-chat" class="flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 flex items-center justify-center gap-2 transition-all">
+                    🤖 AI Friend
+                </button>
             </div>
             
-            <div id="transcript-box" class="flex-grow p-6 overflow-y-auto space-y-4 bg-white scroll-smooth relative">
-                <div class="text-center text-gray-400 text-sm mt-10 italic" id="placeholder-text">
-                    Waiting for speech...
+            <!-- Transcript Tab Content -->
+            <div id="tab-transcript" class="flex-grow flex flex-col">
+                <div class="p-4 bg-blue-50/50 border-b border-blue-100 flex items-center justify-between">
+                    <p class="text-xs text-gray-500 font-medium" id="translating-to-text">Translating to English...</p>
+                    <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Live</span>
                 </div>
-                <!-- Transcripts go here -->
+                <div id="transcript-box" class="flex-grow p-6 overflow-y-auto space-y-4 bg-white scroll-smooth relative">
+                    <div class="text-center text-gray-400 text-sm mt-10 italic" id="placeholder-text">
+                        Waiting for speech...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Tab Content -->
+            <div id="tab-chat" class="hidden flex-grow flex flex-col">
+                <div class="p-4 bg-indigo-50/50 border-b border-indigo-100 flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <p class="text-xs text-gray-600 font-bold">Your AI Study Buddy (Gemini 2.0)</p>
+                </div>
+                
+                <!-- Messages List -->
+                <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 bg-gray-50/30 scroll-smooth">
+                    <!-- Initial Bot Message -->
+                    <div class="flex items-start gap-2 max-w-[85%]">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-xs text-white shadow-md flex-shrink-0">🤖</div>
+                        <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 text-sm text-gray-700 leading-relaxed">
+                            Hey! I'm your AI session companion. Need help understanding something or just want to chat? I'm right here! 😊
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input area -->
+                <div class="p-4 border-t border-gray-100 bg-white">
+                    <form onsubmit="sendChatMessage(event)" class="relative">
+                        <input type="text" id="chat-input" placeholder="Ask your AI friend..." 
+                               class="w-full pl-4 pr-12 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-400 focus:ring-0 outline-none text-sm transition-all shadow-inner" autocomplete="off">
+                        <button type="submit" id="chat-send-btn" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-500 text-white rounded-xl flex items-center justify-center hover:bg-indigo-600 transition shadow-lg">
+                            🏹
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -687,6 +725,96 @@
             }, 500);
         }
     });
+
+    // --- TAB SWITCH LOGIC ---
+    function switchTab(tab) {
+        const transcriptTab = document.getElementById('tab-transcript');
+        const chatTab = document.getElementById('tab-chat');
+        const transcriptBtn = document.getElementById('tab-btn-transcript');
+        const chatBtn = document.getElementById('tab-btn-chat');
+
+        if(tab === 'transcript') {
+            transcriptTab.classList.remove('hidden');
+            chatTab.classList.add('hidden');
+            transcriptBtn.classList.add('border-blue-500', 'text-blue-600');
+            transcriptBtn.classList.remove('border-transparent', 'text-gray-400');
+            chatBtn.classList.remove('border-blue-500', 'text-blue-600');
+            chatBtn.classList.add('border-transparent', 'text-gray-400');
+        } else {
+            transcriptTab.classList.add('hidden');
+            chatTab.classList.remove('hidden');
+            chatBtn.classList.add('border-blue-500', 'text-blue-600');
+            chatBtn.classList.remove('border-transparent', 'text-gray-400');
+            transcriptBtn.classList.remove('border-blue-500', 'text-blue-600');
+            transcriptBtn.classList.add('border-transparent', 'text-gray-400');
+            // Scroll chat to bottom when switching
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    }
+
+    // --- AI CHAT LOGIC ---
+    async function sendChatMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const msg = input.value.trim();
+        if(!msg) return;
+
+        // Add user message to UI
+        addMessageToUI('user', msg);
+        input.value = '';
+
+        // Typing indicator
+        const typingId = 'typing-' + Date.now();
+        addTypingIndicator(typingId);
+
+        try {
+            const resp = await fetch("{{ url_for('tutor.live_chat') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: msg })
+            });
+            const data = await resp.json();
+            
+            // Remove indicator and show response
+            document.getElementById(typingId)?.remove();
+            addMessageToUI('bot', data.response || "I'm a bit lost, could you say that again? 😅");
+        } catch (err) {
+            console.error(err);
+            document.getElementById(typingId)?.remove();
+            addMessageToUI('bot', "Oops! Something went wrong. Let's try again! 🧡");
+        }
+    }
+
+    function addMessageToUI(role, text) {
+        const chatBox = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = `flex ${role === 'user' ? 'justify-end' : 'items-start'} gap-2 max-w-[90%] ${role === 'user' ? 'ml-auto' : ''}`;
+        
+        const content = role === 'user' 
+            ? `<div class="bg-indigo-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md text-sm leading-relaxed">${text}</div>`
+            : `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-xs text-white shadow-md flex-shrink-0">🤖</div>
+                <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 text-sm text-gray-700 leading-relaxed">${text}</div>
+            `;
+            
+        div.innerHTML = content;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function addTypingIndicator(id) {
+        const chatBox = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = "flex items-start gap-2 max-w-[85%]";
+        div.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500 flex-shrink-0 animate-pulse">🤖</div>
+            <div class="bg-gray-100 p-3 rounded-2xl rounded-tl-none text-xs text-gray-400 italic">Writing...</div>
+        `;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
 </script>
 {% endblock %}

@@ -198,7 +198,7 @@ def generate_gemini_paper(topic, language):
     if cached: return cached
 
     system_instruction = (
-        f"You are a PhD-level academic writer. Generate a comprehensive and extensive research paper about '{topic}' "
+        f"You are a PhD-level academic writer. Generate a comprehensive and extensive survey paper about '{topic}' "
         f"written entirely in {language}. The paper MUST be between 2000 and 2500 words in length. "
         f"Each section should be highly detailed with in-depth academic analysis. "
         f"You MUST strictly adhere to these 10 Academic Quality Rules:\n"
@@ -252,7 +252,7 @@ def generate_gemini_paper(topic, language):
             
             # If all fail, use demo mode
             refs = "\n".join([f"{i}. Expert, A. (202{random.randint(0,5)}). Research on {topic} Vol {i}." for i in range(1, 13)])
-            return f"""# [DEMO MODE: Quota Exceeded] Research Paper: {topic}
+            return f"""# [DEMO MODE: Quota Exceeded] Survey Paper: {topic}
 ## Abstract
 This paper explores {topic}. Due to AI quota limits, this sample serves as a placeholder for testing.
 

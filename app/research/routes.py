@@ -92,7 +92,7 @@ def download():
             except: pass
             return response
             
-        return send_file(temp_out, as_attachment=True, download_name=f'research_paper.{ext}')
+        return send_file(temp_out, as_attachment=True, download_name=f'survey_paper.{ext}')
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

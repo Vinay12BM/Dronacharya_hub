@@ -179,6 +179,12 @@ def chat_page():
     session['chat_history'] = []
     return render_template('tutor/chat.html')
 
+@tutor_bp.route('/robite')
+@login_required
+def robite_page():
+    # Dedicated "Friend Chat" page
+    return render_template('tutor/robite.html')
+
 @tutor_bp.route('/api/chat', methods=['POST'])
 @login_required
 def api_chat():
@@ -409,6 +415,38 @@ def api_generate_summary():
 @login_required
 def live_session(session_id=None):
     return render_template('tutor/live_session.html', session_id=session_id)
+
+@tutor_bp.route('/live-chat', methods=['POST'])
+@login_required
+def live_chat():
+    user_msg = request.json.get('message', '')
+    if not user_msg:
+        return jsonify({'error': 'No message provided'}), 400
+    
+    # Custom prompt for "friend" persona
+    friendly_prompt = f"""
+    You are a supportive, friendly, and cool AI friend for a student. 
+    A student is currently in a Live Session on Dronacharya Hub and messaged you: "{user_msg}"
+    
+    Respond in a warm, encouraging, and informal tone (like a close friend or a helpful senior). 
+    Keep it concise but caring. Use emojis. 
+    If they ask about the session, encourage them to stay focused and enjoy learning.
+    """
+    
+    try:
+        response_text = generate_gemini_chat(friendly_prompt)
+        
+        # Generate TTS for voice response
+        import uuid
+        filename = f"robite_{uuid.uuid4().hex[:6]}.mp3"
+        filepath = os.path.join(current_app.config['AUDIO_FOLDER'], filename)
+        generate_tts(response_text, filepath)
+        audio_url = url_for('static', filename='audio/' + filename)
+
+        return jsonify({'response': response_text, 'audio_url': audio_url})
+    except Exception as e:
+        print(f"Gemini Chat Error: {e}")
+        return jsonify({'response': "Hey! My brain took a tiny nap. What were we talking about? 😊"})
 
 @tutor_bp.route('/api/live-translate', methods=['POST'])
 @login_required
