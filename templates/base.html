@@ -128,10 +128,6 @@
         class="px-4 py-3 text-sm font-semibold transition-all flex items-center gap-2 {% if request.endpoint == 'tutor.quiz_history' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-500 hover:text-blue-600{% endif %}">
         <span>📜 Quiz History</span>
       </a>
-      <a href="{{ url_for('tutor.camera_page') }}"
-        class="px-4 py-3 text-sm font-semibold transition-all flex items-center gap-2 {% if request.endpoint == 'tutor.camera_page' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-500 hover:text-blue-600{% endif %}">
-        <span>📸 AI Camera</span>
-      </a>
       <a href="{{ url_for('tutor.profile') }}"
         class="px-4 py-3 text-sm font-semibold transition-all flex items-center gap-2 {% if request.endpoint == 'tutor.profile' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-500 hover:text-blue-600{% endif %}">
         <span>👤 Profile</span>
@@ -177,11 +173,6 @@
       class="flex flex-col items-center gap-1 {% if request.blueprint == 'tutor' %}text-blue-600{% else %}text-gray-500{% endif %}">
       <span class="text-xl">🎓</span>
       <span class="text-[9px] font-bold">Tutor</span>
-    </a>
-    <a href="{{ url_for('tutor.camera_page') }}"
-      class="flex flex-col items-center gap-1 {% if request.endpoint == 'tutor.camera_page' %}text-blue-600{% else %}text-gray-500{% endif %}">
-      <span class="text-xl">📸</span>
-      <span class="text-[9px] font-bold">Camera</span>
     </a>
     <a href="{{ url_for('research.index') }}"
       class="flex flex-col items-center gap-1 {% if request.blueprint == 'research' %}text-violet-600{% else %}text-gray-500{% endif %}">
