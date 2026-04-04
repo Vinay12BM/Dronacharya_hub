@@ -7,8 +7,14 @@ class Config:
 
     # Database settings
     database_url = os.getenv('DATABASE_URL', 'sqlite:///dronacharya.db')
-    if database_url and database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    if database_url:
+        # Standard fix for Render/Heroku (replace postgres:// with postgresql://)
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        
+        # FIX: Remove pgbouncer=true query param that causes SQLAlchemy/Psycopg2 to crash
+        if '?pgbouncer=true' in database_url:
+            database_url = database_url.split('?')[0]
     
     SQLALCHEMY_DATABASE_URI = database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False

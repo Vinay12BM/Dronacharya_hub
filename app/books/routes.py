@@ -57,7 +57,10 @@ def list_book():
                     file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], unique_name))
                     filename = unique_name
 
-        
+        if not filename:
+            filename = request.form.get('cover_url')
+        if filename == '': filename = None
+
         print(f"DEBUG: Creating new book with image: {filename}")
         new_book = Book(
             title=title, price=price, seller_name=seller_name, seller_phone=seller_phone,

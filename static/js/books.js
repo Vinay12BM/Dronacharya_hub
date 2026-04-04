@@ -139,11 +139,31 @@ function previewCoverImage(input){
   if(input.files&&input.files[0]){
     const r=new FileReader();
     r.onload=e=>{
-      document.getElementById('cover-preview').src=e.target.result;
-      document.getElementById('cover-preview').classList.remove('hidden');
-      document.getElementById('upload-placeholder').classList.add('hidden');
+      const prev = document.getElementById('cover-preview');
+      const placeholder = document.getElementById('upload-placeholder');
+      const urlInput = document.getElementById('url-input');
+      
+      if(prev) { prev.src=e.target.result; prev.classList.remove('hidden'); }
+      if(placeholder) { placeholder.classList.add('hidden'); }
+      if(urlInput) { urlInput.value = ''; } // Clear URL if file is selected
     };
     r.readAsDataURL(input.files[0]);
+  }
+}
+
+function previewUrlImage(input){
+  const url = input.value.trim();
+  const prev = document.getElementById('cover-preview');
+  const placeholder = document.getElementById('upload-placeholder');
+  const fileInput = document.getElementById('file-input');
+
+  if(url){
+    if(prev) { prev.src=url; prev.classList.remove('hidden'); }
+    if(placeholder) { placeholder.classList.add('hidden'); }
+    if(fileInput) { fileInput.value = ''; } // Clear file if URL is pasted
+  } else {
+    if(prev) { prev.classList.add('hidden'); }
+    if(placeholder) { placeholder.classList.remove('hidden'); }
   }
 }
 
@@ -156,10 +176,15 @@ function validateListForm(){
     return false;
   }
   
-  const coverInput = document.querySelector('input[name="cover_image"]');
-  if(!coverInput || !coverInput.files || coverInput.files.length === 0){
-    alert('⚠️ Please select a cover photo for your book.');
-    coverInput?.parentElement?.scrollIntoView({behavior:'smooth'});
+  const fileInput = document.getElementById('file-input');
+  const urlInput = document.getElementById('url-input');
+  
+  const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+  const hasUrl = urlInput && urlInput.value.trim() !== '';
+
+  if(!hasFile && !hasUrl){
+    alert('⚠️ Please either upload a cover photo OR paste an image URL.');
+    document.getElementById('url-input')?.scrollIntoView({behavior:'smooth'});
     return false;
   }
   return true;

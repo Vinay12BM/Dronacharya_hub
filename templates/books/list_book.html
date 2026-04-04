@@ -38,16 +38,32 @@
             </div>
 
             <!-- Upload -->
-            <div class="flex flex-col items-center">
-                <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 self-start md:self-center">Cover Preview</label>
-                <label class="w-full aspect-[3/4] card bg-gray-50 border-dashed border-2 flex items-center justify-center text-center p-4 cursor-pointer hover:border-green-400 group relative">
-                    <input type="file" name="cover_image" required class="hidden" onchange="previewCoverImage(this)">
-                    <img id="cover-preview" src="" class="absolute inset-0 w-full h-full object-cover hidden rounded-2xl">
-                    <div id="upload-placeholder" class="group-hover:scale-110 transition">
-                        <div class="text-4xl grayscale group-hover:grayscale-0 transition mb-4">🖼️</div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Cover Photo</p>
+            <div class="flex flex-col items-center w-full">
+                <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 self-start md:self-center">Cover Image (Upload or URL)</label>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    <!-- File Upload Box -->
+                    <label class="w-full aspect-[3/4] card bg-gray-50 border-dashed border-2 flex items-center justify-center text-center p-4 cursor-pointer hover:border-green-400 group relative overflow-hidden">
+                        <input type="file" name="cover_image" class="hidden" id="file-input" onchange="previewCoverImage(this)">
+                        <img id="cover-preview" src="" class="absolute inset-0 w-full h-full object-cover hidden rounded-2xl">
+                        <div id="upload-placeholder" class="group-hover:scale-110 transition">
+                            <div class="text-4xl grayscale group-hover:grayscale-0 transition mb-4">🖼️</div>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Click to Upload</p>
+                        </div>
+                    </label>
+
+                    <!-- URL Input Box -->
+                    <div class="flex flex-col justify-center gap-4">
+                        <div class="text-center md:text-left">
+                            <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded">OR</span>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-gray-400 text-[10px] font-black uppercase tracking-widest">Paste Image URL</label>
+                            <input type="url" name="cover_url" id="url-input" class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-green-600 transition outline-none text-sm font-bold" placeholder="https://example.com/image.jpg" oninput="previewUrlImage(this)">
+                        </div>
+                        <p class="text-[9px] text-gray-400 italic">Hint: You can use images from Google, Pinterest, or any website.</p>
                     </div>
-                </label>
+                </div>
             </div>
         </div>
 

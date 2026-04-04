@@ -49,7 +49,7 @@
     </a>
 
     <!-- Desktop Nav Links — 3 Products -->
-    <div class="hidden md:flex items-center gap-1">
+    <div class="hidden lg:flex items-center gap-1">
       <a href="{{ url_for('tutor.welcome') }}"
          class="px-4 py-2 rounded-lg hover:bg-blue-600/30 transition text-sm font-medium flex items-center gap-2">
         🎓 <span>Tutor</span>
@@ -80,14 +80,14 @@
     <div class="flex items-center gap-3">
       {% if current_user and current_user.is_authenticated %}
         <a href="{{ url_for('tutor.dashboard') }}"
-           class="hidden md:flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 px-3 py-2 rounded-lg text-sm transition">
+           class="hidden lg:flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 px-3 py-2 rounded-lg text-sm transition">
           <img src="{% if current_user.profile_pic.startswith('http') %}{{ current_user.profile_pic }}{% else %}{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}{% endif %}"
                class="w-7 h-7 rounded-full object-cover">
           <span>{{ current_user.first_name }}</span>
         </a>
       {% else %}
         <a href="{{ url_for('tutor.login') }}"
-           class="hidden md:block text-gray-300 hover:text-white text-sm px-3 py-2">Login</a>
+           class="hidden lg:block text-gray-300 hover:text-white text-sm px-3 py-2">Login</a>
       {% endif %}
       <a href="{{ url_for('books.list_book') }}"
          class="bg-amber-500 hover:bg-amber-400 text-white font-bold px-4 py-2 rounded-full text-sm transition shadow-lg">
@@ -152,15 +152,42 @@
 </main>
 
 <!-- ═══════════════════════════════════════════
+     MOBILE BOTTOM NAVIGATION (App Style)
+     Visible on phones and tablets (< 1024px)
+═══════════════════════════════════════════ -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-2 flex justify-between items-center shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+  <a href="{{ url_for('home') }}" class="flex flex-col items-center gap-1 {% if request.endpoint == 'home' %}text-blue-600{% else %}text-gray-500{% endif %}">
+    <span class="text-xl">🏠</span>
+    <span class="text-[10px] font-bold">Home</span>
+  </a>
+  <a href="{{ url_for('tutor.welcome') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'tutor' %}text-blue-600{% else %}text-gray-500{% endif %}">
+    <span class="text-xl">🎓</span>
+    <span class="text-[10px] font-bold">Tutor</span>
+  </a>
+  <a href="{{ url_for('research.index') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'research' %}text-violet-600{% else %}text-gray-500{% endif %}">
+    <span class="text-xl">📄</span>
+    <span class="text-[10px] font-bold">Research</span>
+  </a>
+  <a href="{{ url_for('books.index') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'books' %}text-green-600{% else %}text-gray-500{% endif %}">
+    <span class="text-xl">📚</span>
+    <span class="text-[10px] font-bold">Books</span>
+  </a>
+  <a href="{{ url_for('games.index') }}" class="flex flex-col items-center gap-1 {% if request.blueprint == 'games' %}text-orange-600{% else %}text-gray-500{% endif %}">
+    <span class="text-xl">🕹️</span>
+    <span class="text-[10px] font-bold">Games</span>
+  </a>
+</nav>
+
+<!-- ═══════════════════════════════════════════
      UNIFIED FOOTER
 ═══════════════════════════════════════════ -->
-<footer style="background:#0B1437;" class="text-white mt-12">
+<footer style="background:#0B1437;" class="text-white mt-12 mb-16 lg:mb-0">
   <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-4 lg:grid-cols-7 gap-8">
     <div>
       <div style="font-family:'Cinzel',serif; color:#F4A261; font-size:18px; margin-bottom:8px;">🏹 Dronacharya Hub</div>
       <p class="text-gray-400 text-sm">Three tools. One platform. Learn, Research, and Read — all in one place.</p>
     </div>
-    <div>
+    <div class="hidden lg:block">
       <h4 class="font-semibold text-blue-400 mb-3">🎓 Tutor</h4>
       <div class="flex flex-col gap-1 text-gray-400 text-sm">
         <a href="{{ url_for('tutor.courses') }}"       class="hover:text-white">Courses</a>
@@ -168,35 +195,35 @@
         <a href="{{ url_for('tutor.chat_page') }}"     class="hover:text-white">AI Chat</a>
       </div>
     </div>
-    <div>
+    <div class="hidden lg:block">
       <h4 class="font-semibold text-violet-400 mb-3">📄 Research</h4>
       <div class="flex flex-col gap-1 text-gray-400 text-sm">
         <a href="{{ url_for('research.index') }}"      class="hover:text-white">Generate Paper</a>
         <a href="{{ url_for('research.index') }}#cite" class="hover:text-white">Citation Engine</a>
       </div>
     </div>
-    <div>
+    <div class="hidden lg:block">
       <h4 class="font-semibold text-green-400 mb-3">📚 My Book</h4>
       <div class="flex flex-col gap-1 text-gray-400 text-sm">
         <a href="{{ url_for('books.browse') }}"        class="hover:text-white">Browse Books</a>
         <a href="{{ url_for('books.list_book') }}"     class="hover:text-white">List Your Book</a>
       </div>
     </div>
-    <div>
+    <div class="hidden lg:block">
       <h4 class="font-semibold text-amber-400 mb-3">🎓 Scholarship</h4>
       <div class="flex flex-col gap-1 text-gray-400 text-sm">
         <a href="{{ url_for('scholarships.index') }}" class="hover:text-white">Recent Scholarships</a>
         <a href="{{ url_for('scholarships.index') }}" class="hover:text-white">Apply Now</a>
       </div>
     </div>
-    <div>
+    <div class="hidden lg:block">
       <h4 class="font-semibold text-indigo-400 mb-3">📝 Notes</h4>
       <div class="flex flex-col gap-1 text-gray-400 text-sm">
         <a href="{{ url_for('notes.index') }}"  class="hover:text-white">Browse Notes</a>
         <a href="{{ url_for('notes.upload') }}" class="hover:text-white">Share Your Notes</a>
       </div>
     </div>
-    <div>
+    <div class="hidden lg:block">
       <h4 class="font-semibold text-orange-400 mb-3">🕹️ Games</h4>
       <div class="flex flex-col gap-1 text-gray-400 text-sm">
         <a href="{{ url_for('games.chess') }}"        class="hover:text-white">Chess Master</a>
