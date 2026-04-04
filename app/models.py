@@ -82,7 +82,7 @@ class Book(db.Model):
     id            = db.Column(db.Integer, primary_key=True)
     title         = db.Column(db.String(200), nullable=False)
     price         = db.Column(db.Float, default=0.0)
-    cover_image   = db.Column(db.String(200), default='default_book.png')
+    cover_image   = db.Column(db.String(200), nullable=True)
     seller_name   = db.Column(db.String(100), nullable=False)
     seller_phone  = db.Column(db.String(20),  nullable=False)
     latitude      = db.Column(db.Float, nullable=False)

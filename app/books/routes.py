@@ -40,7 +40,7 @@ def list_book():
         description = request.form.get('description', '')
         listing_type = request.form.get('listing_type', 'sell')
         
-        filename = 'default_book.png'
+        filename = None
         if 'cover_image' in request.files:
             file = request.files['cover_image']
             if file and file.filename != '':

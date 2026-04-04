@@ -155,5 +155,12 @@ function validateListForm(){
     document.getElementById('location-btn')?.scrollIntoView({behavior:'smooth'});
     return false;
   }
+  
+  const coverInput = document.querySelector('input[name="cover_image"]');
+  if(!coverInput || !coverInput.files || coverInput.files.length === 0){
+    alert('⚠️ Please select a cover photo for your book.');
+    coverInput?.parentElement?.scrollIntoView({behavior:'smooth'});
+    return false;
+  }
   return true;
 }

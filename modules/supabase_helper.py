@@ -40,7 +40,10 @@ def upload_file_to_supabase(bucket: str, file_obj, remote_path: str):
         
         # Get public URL
         url_res = supabase.storage.from_(bucket).get_public_url(remote_path)
-        return url_res
+        # Handle dictionary response in some versions of supabase-py
+        if isinstance(url_res, dict) and 'publicUrl' in url_res:
+            return url_res['publicUrl']
+        return str(url_res)
     except Exception as e:
         print(f"DEBUG: Supabase upload failed for {remote_path}: {e}")
         return None
