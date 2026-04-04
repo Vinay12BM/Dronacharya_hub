@@ -5,6 +5,13 @@ from flask import current_app
 def get_supabase_client() -> Client:
     url = current_app.config.get('SUPABASE_URL')
     key = current_app.config.get('SUPABASE_KEY')
+    if key and key.startswith('sb_publishable_'):
+        print("\n" + "!"*60)
+        print("CRITICAL ERROR: YOU ARE USING A STRIPE KEY AS A SUPABASE KEY!")
+        print("YOUR IMAGES WILL NOT UPLOAD PERMANENTLY UNTIL THIS IS FIXED.")
+        print("PLEASE REPLACE 'SUPABASE_KEY' WITH THE CORRECT ANON KEY FROM SUPABASE.")
+        print("!"*60 + "\n")
+        return None
     if not url or not key:
         return None
     return create_client(url, key)
