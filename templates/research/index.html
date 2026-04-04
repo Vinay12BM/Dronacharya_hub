@@ -75,9 +75,18 @@
 
         async function startResearchPayment() {
             const btn = document.getElementById('pay-btn');
-            btn.disabled = true; btn.textContent = 'Preparing...';
+            btn.disabled = true; 
+            btn.textContent = 'Waking up server...';
 
             try {
+                // Step 1: Wake server (optional but good for Render free tier)
+                await fetch("/");
+
+                // Step 2: wait a bit for server to fully breathe
+                await new Promise(r => setTimeout(r, 4000));
+
+                btn.textContent = 'Preparing...';
+
                 const res = await fetch('/research/create-order', { method: 'POST' });
                 const data = await res.json();
 
