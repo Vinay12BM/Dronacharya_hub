@@ -66,4 +66,203 @@
     </div>
   </div>
 </div>
+
+<!-- Anti-Cheat Overlay & Camera -->
+<div id="anti-cheat-container" class="fixed bottom-4 right-4 w-48 h-36 bg-black rounded-2xl overflow-hidden border-2 border-amber-400 shadow-2xl z-50 hidden">
+    <video id="cheat-video" class="w-full h-full object-cover" autoplay muted playsinline></video>
+    <canvas id="cheat-canvas" class="hidden"></canvas>
+    <div id="cheat-status" class="absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-[10px] rounded-full font-bold uppercase">Monitoring</div>
+</div>
+
+<style>
+  @keyframes flicker-bg {
+    0% { background-color: rgba(255, 0, 0, 0.8); }
+    50% { background-color: rgba(0, 255, 0, 0.8); }
+    100% { background-color: rgba(255, 0, 0, 0.8); }
+  }
+  .cheating-alert-active {
+    animation: flicker-bg 0.15s infinite !important;
+    position: relative;
+    z-index: 9999;
+  }
+  .cheating-alert-active * {
+    pointer-events: none;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<!-- TF.js and Models -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+<script>
+  let blazefaceModel, cocoModel;
+  let videoEl, canvasEl, ctx;
+  let antiCheatActive = false;
+  let cheatDetected = false;
+  let lastVoiceTime = 0;
+
+  async function initAntiCheat() {
+    try {
+        blazefaceModel = await blazeface.load();
+        cocoModel = await cocoSsd.load();
+        videoEl = document.getElementById('cheat-video');
+        canvasEl = document.getElementById('cheat-canvas');
+        ctx = canvasEl.getContext('2d');
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoEl.srcObject = stream;
+        document.getElementById('anti-cheat-container').classList.remove('hidden');
+        
+        antiCheatActive = true;
+        runDetectionLoop();
+    } catch (e) {
+        console.error("Anti-cheat init failed:", e);
+        alert("Camera permission is required for the AI Quiz security. Please enable camera and refresh.");
+    }
+  }
+
+  async function runDetectionLoop() {
+    if (!antiCheatActive) return;
+
+    if (videoEl.readyState >= 2) {
+        const facePredictions = await blazefaceModel.estimateFaces(videoEl, false);
+        const objectPredictions = await cocoModel.detect(videoEl);
+        
+        let issueCount = 0;
+        let reason = "ALL OK";
+
+        // 1. Face Detection
+        if (facePredictions.length === 0) {
+            issueCount++;
+            reason = "NO FACE DETECTED";
+        } else if (facePredictions.length > 1) {
+            issueCount++;
+            reason = "MULTIPLE PEOPLE DETECTED";
+        } else {
+            // Check Head/Eyes alignment
+            const landmarks = facePredictions[0].landmarks;
+            const rightEye = landmarks[0];
+            const leftEye = landmarks[1];
+            const nose = landmarks[2];
+            
+            // Basic heuristic for side-turning: nose position relative to eyes
+            const eyeCenter = (rightEye[0] + leftEye[0]) / 2;
+            const headTurn = Math.abs(nose[0] - eyeCenter);
+            
+            if (headTurn > 15) { // Threshold for turn
+                issueCount++;
+                reason = "TURNED HEAD DETECTED";
+            }
+        }
+
+        // 2. Object Detection (Phone)
+        const phone = objectPredictions.find(p => p.class === 'cell phone');
+        if (phone) {
+            issueCount++;
+            reason = "CELL PHONE DETECTED";
+        }
+
+        if (issueCount > 0) {
+            triggerCheatAlert(reason);
+        } else {
+            clearCheatAlert();
+        }
+    }
+    
+    setTimeout(runDetectionLoop, 1000); // Run every 1 second as requested
+  }
+
+  function triggerCheatAlert(reason) {
+    cheatDetected = true;
+    document.body.classList.add('cheating-alert-active');
+    document.getElementById('cheat-status').textContent = reason;
+    document.getElementById('cheat-status').className = "absolute top-2 left-2 px-2 py-1 bg-red-600 text-white text-[10px] rounded-full font-bold uppercase";
+    
+    // Voice alert
+    const now = Date.now();
+    if (now - lastVoiceTime > 2000) { 
+        const msgText = reason === "TAB SWITCHED" ? "stop cheating" : "idiot concentrate";
+        const utterance = new SpeechSynthesisUtterance(msgText);
+        utterance.rate = 1.2;
+        window.speechSynthesis.speak(utterance);
+        lastVoiceTime = now;
+    }
+  }
+
+  // Detect Tab Switching
+  let tabCheatSoundInterval;
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && antiCheatActive) {
+       triggerCheatAlert("TAB SWITCHED");
+       // Start continuous loops of voice alerts while tab is hidden
+       if (!tabCheatSoundInterval) {
+          tabCheatSoundInterval = setInterval(() => {
+              const utterance = new SpeechSynthesisUtterance("stop cheating");
+              utterance.rate = 1.3;
+              window.speechSynthesis.speak(utterance);
+          }, 1500);
+       }
+    } else if (document.visibilityState === "visible") {
+       // Stop the continuous voice loop when user comes back
+       if (tabCheatSoundInterval) {
+          clearInterval(tabCheatSoundInterval);
+          tabCheatSoundInterval = null;
+          window.speechSynthesis.cancel(); // Stop any pending utterances
+       }
+    }
+  });
+
+  window.addEventListener("blur", () => {
+    if (antiCheatActive) {
+       triggerCheatAlert("TAB SWITCHED");
+    }
+  });
+
+  function clearCheatAlert() {
+    // If we're currently in a hidden state, don't clear
+    if (document.visibilityState === "hidden") return;
+    
+    cheatDetected = false;
+    document.body.classList.remove('cheating-alert-active');
+    document.getElementById('cheat-status').textContent = "Monitoring";
+    document.getElementById('cheat-status').className = "absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-[10px] rounded-full font-bold uppercase";
+  }
+
+  // Hook into the existing start quiz button
+  const originalGenerateQuiz = window.generateQuiz;
+  window.generateQuiz = async function() {
+    const topic = document.getElementById('quiz-topic').value.trim();
+    if (!topic) { alert('Enter a topic.'); return; }
+    
+    // Request camera and load models
+    await initAntiCheat();
+    
+    // Continue with original logic
+    if (antiCheatActive) {
+        originalGenerateQuiz();
+    }
+  };
+
+  // Stop monitoring when results show
+  function stopAntiCheat() {
+    antiCheatActive = false;
+    if (videoEl && videoEl.srcObject) {
+        videoEl.srcObject.getTracks().forEach(track => track.stop());
+    }
+    document.getElementById('anti-cheat-container').classList.add('hidden');
+    clearCheatAlert();
+  }
+
+  // Monitor for global results display
+  const observer = new MutationObserver(() => {
+    if (!document.getElementById('results-display').classList.contains('hidden')) {
+        stopAntiCheat();
+    }
+  });
+  observer.observe(document.getElementById('results-display'), { attributes: true, attributeFilter: ['class'] });
+</script>
 {% endblock %}
